@@ -1,0 +1,189 @@
+events	Hit Or Out?	bb_type	hc_x	hc_y	hit_distance_sc	launch_speed	launch_angle	pitch_name	if_fielding_alignment	of_fielding_alignment	adj_hc_x	adj_hc_y	spray_angle
+fielders_choice	0	ground_ball	148.32	179.88	15	95.7	-7	Changeup	Infield shift	Strategic	22.9	18.39	38.42516867
+field_out	0	line_drive	186.29	90.99	306	107	16	4-Seam Fastball	Infield shift	Strategic	60.87	107.28	22.17772873
+single	1	ground_ball	188.69	101.31	81	97.1	4	Slider	Strategic	Strategic	63.27	96.96	24.84445512
+fielders_choice	0	ground_ball	146.29	159.46	7	95	-17	Changeup	Infield shift	Standard	20.87	38.81	21.20178972
+home_run	1	line_drive	211.76	72.8	376	103.2	22	Slider	Infield shift	Strategic	86.34	125.47	25.89984656
+triple	1	line_drive	174.05	59.37	364	109.4	18	4-Seam Fastball	Infield shift	Strategic	48.63	138.9	14.47166868
+field_out	0	ground_ball	112.68	151.91	33	71	-1	Cutter	Standard	Standard	-12.74	46.36	-11.52443233
+field_out	0	popup	119.15	201.15	17	71.7	83	Sinker	Standard	Standard	-6.27	-2.88	48.99694118
+field_out	0	ground_ball	158.89	166.84	67	58.2	7	4-Seam Fastball	Infield shift	Standard	33.47	31.43	35.10028796
+field_out	0	popup	92.91	186.99	78	78.6	75	Sinker	Standard	Standard	-32.51	11.28	-53.14856373
+field_out	0	ground_ball	84.31	157.96	11	104.6	-7	Sinker	Standard	Standard	-41.11	40.31	-34.17221029
+home_run	1	fly_ball	224.29	98.95	345	92.4	34	4-Seam Fastball	Strategic	Strategic	98.87	99.32	33.65243053
+single	1	ground_ball	160.86	150.9	29	94.8	-5	Cutter	Infield shift	Standard	35.44	47.37	27.60157761
+field_out	0	ground_ball	95.69	150.1	21	75.5	-6	Cutter	Standard	Standard	-29.73	48.17	-23.76182499
+field_out	0	ground_ball	156.89	162.85	35	93.5	-2	Sinker	Infield shift	Standard	31.47	35.42	31.21536318
+double	1	line_drive	201.25	114.69	279	99.9	18	Sinker	Infield shift	Standard	75.83	83.58	31.66249165
+field_out	0	line_drive	162.54	163.55	129	96.8	8	Slider	Infield shift	Standard	37.12	34.72	35.18505096
+field_out	0	popup	97	141	180	90.9	61	Sinker	Standard	Standard	-28.42	57.27	-19.79453661
+home_run	1	fly_ball	202.31	66.57	377	99	34	Slider	Infield shift	Standard	76.89	131.7	22.70814849
+single	1	ground_ball	108.94	185.56	1	87.6	-66	4-Seam Fastball	Standard	Standard	-16.48	12.71	-39.26942262
+field_out	0	ground_ball	146.83	139.21	86	77.2	7	Slider	Infield shift	Standard	21.41	59.06	14.94466781
+field_out	0	popup	103.75	143.86	152	79.2	63	Slider	Standard	Standard	-21.67	54.41	-16.28701974
+single	1	ground_ball	90.27	150.69	9	94.7	-15	Slider	Standard	Standard	-35.15	47.58	-27.34151232
+home_run	1	fly_ball	16.95	82.62	408	106.1	31	4-Seam Fastball	Standard	Standard	-108.47	115.65	-32.37380741
+field_out	0	ground_ball	99.88	172.02	9	81.6	-12	Cutter	Standard	Standard	-25.54	26.25	-33.16092699
+single	1	ground_ball	170.53	143.43	95	77.9	7	Changeup	Infield shift	Standard	45.11	54.84	29.57988879
+double	1	line_drive	219.21	104.79	306	108.9	17	4-Seam Fastball	Infield shift	Standard	93.79	93.48	33.82113396
+single	1	line_drive	157.1	109.05	188	105.8	10	4-Seam Fastball	Infield shift	Standard	31.68	89.22	14.66159804
+field_out	0	popup	164.39	155.18	147	76.3	62	4-Seam Fastball	Infield shift	Standard	38.97	43.09	31.59431609
+home_run	1	line_drive	28.82	78.24	381	108.3	23	Changeup	Standard	Standard	-96.6	120.03	-29.12030197
+home_run	1	fly_ball	204.53	46.68	410	106.1	26	4-Seam Fastball	Strategic	Standard	79.11	151.59	20.66896797
+field_out	0	line_drive	151.28	128.68	188	78.7	16	Sinker	Infield shift	Standard	25.86	69.59	15.28899272
+field_out	0	ground_ball	160.77	138.64	141	64.1	16	Sinker	Infield shift	Standard	35.35	59.63	22.99530907
+field_out	0	ground_ball	165.43	155.17	68	88.5	3	Sinker	Infield shift	Strategic	40.01	43.1	32.15305816
+home_run	1	line_drive	23.78	67.18	410	106.7	27	Cutter	Standard	Standard	-101.64	131.09	-28.34102877
+triple	1	line_drive	206.56	74.64	328	95.1	24	Slider	Infield shift	Strategic	81.14	123.63	24.958064
+field_out	0	popup	151.06	149.1	143	90.8	64	Slider	Infield shift	Strategic	25.64	49.17	20.65505003
+field_out	0	fly_ball	196.17	86.5	326	93.4	36	Slider	Infield shift	Strategic	70.75	111.77	24.25024527
+force_out	0	ground_ball	162.89	161.62	14	83	-3	Changeup	Infield shift	Strategic	37.47	36.65	34.22538407
+grounded_into_double_play	0	ground_ball	155.64	163.54	3	75.8	-27	Changeup	Infield shift	Strategic	30.22	34.73	30.77090239
+single	1	ground_ball	148.45	143.61	7	90.3	-13	Split-Finger	Infield shift	Standard	23.03	54.66	17.13543203
+field_out	0	ground_ball	95.35	166.67	114	112.2	4	Sinker	Standard	Standard	-30.07	31.6	-32.68411022
+field_out	0	ground_ball	101.36	166.63	4	97	-34	4-Seam Fastball	Infield shift	Standard	-24.06	31.64	-27.93783124
+grounded_into_double_play	0	ground_ball	105.6	171.23	80	102.6	3	4-Seam Fastball	Standard	Standard	-19.82	27.04	-27.18073131
+home_run	1	line_drive	224.42	97.67	348	104.3	21	Slider	Infield shift	Strategic	99	100.6	33.40554377
+field_out	0	ground_ball	160.65	139.72	20	102.2	-6	Sinker	Infield shift	Standard	35.23	58.55	23.27674247
+field_out	0	fly_ball	71.82	112.01	255	94.8	54	4-Seam Fastball	Strategic	Strategic	-53.6	86.26	-23.89190758
+field_out	0	popup	187.34	158.79	171	61.7	52	Cutter	Infield shift	Strategic	61.92	39.48	43.10890648
+field_out	0	ground_ball	86.8	164.04	5	76	-21	Changeup	Standard	Standard	-38.62	34.23	-36.33638987
+field_out	0	fly_ball	175.92	85.97	306	82.5	32	Curveball	Infield shift	Standard	50.5	112.3	18.15967021
+field_out	0	ground_ball	163.88	152.89	106	72	9	4-Seam Fastball	Infield shift	Standard	38.46	45.38	30.21120502
+single	1	ground_ball	162.78	93.7	134	89.7	8	Slider	Infield shift	Standard	37.36	104.57	14.74531398
+single	1	ground_ball	169.08	98.46	127	105.2	7	Changeup	Infield shift	Standard	43.66	99.81	17.71954883
+field_out	0	fly_ball	86.63	85.28	299	84.5	38	4-Seam Fastball	Standard	Strategic	-38.79	112.99	-14.21069098
+double	1	line_drive	45.39	117.7	281	79.4	28	4-Seam Fastball	Standard	Standard	-80.03	80.57	-33.60551243
+force_out	0	ground_ball	127.59	201.95	6	95.9	-21	Cutter	Infield shift	Standard	2.17	-3.68	-22.89505785
+home_run	1	fly_ball	217.47	93.48	344	96.9	41	Sinker	Infield shift	Standard	92.05	104.79	30.97262423
+home_run	1	fly_ball	244.05	87.16	399	106	26	4-Seam Fastball	Infield shift	Standard	118.63	111.11	35.15608018
+double	1	line_drive	219.25	107.17	229	94.1	16	4-Seam Fastball	Infield shift	Standard	93.83	91.1	34.38431887
+field_out	0	ground_ball	161.54	135.96	116	101.6	6	4-Seam Fastball	Infield shift	Standard	36.12	62.31	22.57508071
+double	1	ground_ball	74.24	153.44	111	100.1	6	4-Seam Fastball	Standard	Standard	-51.18	44.83	-36.58797846
+field_out	0	fly_ball	86.93	60.33	355	97	38	Slider	Standard	Standard	-38.49	137.94	-11.69319671
+field_out	0	fly_ball	30.41	105.54	327	100.9	49	4-Seam Fastball	Standard	Standard	-95.01	92.73	-34.27184386
+field_out	0	fly_ball	174.8	83.95	309	93.2	39	Changeup	Infield shift	Standard	49.38	114.32	17.52128165
+field_out	0	popup	165.58	161.85	137	71	64	Changeup	Infield shift	Standard	40.16	36.42	35.84698445
+single	1	line_drive	156.09	95.26	269	76.7	26	4-Seam Fastball	Infield shift	Standard	30.67	103.01	12.43520464
+field_out	0	fly_ball	166.76	65.69	344	99.8	39	Sinker	Infield shift	Standard	41.34	132.58	12.98856856
+force_out	0	ground_ball	156.21	157.48	96	78.3	7	Changeup	Infield shift	Strategic	30.79	40.79	27.78527512
+field_out	0	line_drive	205.71	85.18	342	101.6	22	Changeup	Infield shift	Standard	80.29	113.09	26.53007861
+field_out	0	line_drive	181.57	87.51	308	86.1	26	Changeup	Infield shift	Strategic	56.15	110.76	20.16211426
+field_out	0	ground_ball	155.61	149.61	74	88.6	5	Sinker	Infield shift	Standard	30.19	48.66	23.86245032
+field_out	0	line_drive	163.72	162.35	133	90.7	9	4-Seam Fastball	Infield shift	Strategic	38.3	35.92	35.12749842
+field_out	0	ground_ball	169.54	137.24	106	108.7	5	Sinker	Infield shift	Strategic	44.12	61.03	26.89802819
+field_out	0	popup	114.6	163.34	100	83.5	69	4-Seam Fastball	Standard	Standard	-10.82	34.93	-12.90826087
+field_out	0	ground_ball	143.35	169.59	19	75.4	-5	Slider	Infield shift	Strategic	17.93	28.68	24.0094242
+force_out	0	ground_ball	145.82	179.51	30	93.5	-2	Curveball	Infield shift	Standard	20.4	18.76	35.54858659
+field_out	0	popup	170.13	144.48	176	79.1	61	Changeup	Infield shift	Standard	44.71	53.79	29.79990211
+home_run	1	fly_ball	197.86	47.14	404	106.4	35	Sinker	Infield shift	Standard	72.44	151.13	19.20708419
+field_out	0	line_drive	162.13	122.19	214	86.6	16	Curveball	Infield shift	Standard	36.71	76.08	19.31862333
+home_run	1	line_drive	19.15	93.7	369	107.9	21	4-Seam Fastball	Standard	Standard	-106.27	104.57	-34.0964738
+field_out	0	popup	126.7	202.92	1	91	68	4-Seam Fastball	Infield shift	Standard	1.28	-4.65	-11.5429271
+field_out	0	ground_ball	157.2	166.25	13	77.4	-9	Changeup	Infield shift	Standard	31.78	32.02	33.58835123
+double	1	line_drive	205.13	89.12	333	103.1	18	Changeup	Infield shift	Standard	79.71	109.15	27.10491539
+grounded_into_double_play	0	ground_ball	145.17	176.31	31	105.4	-3	4-Seam Fastball	Infield shift	Standard	19.75	21.96	31.47526892
+field_out	0	ground_ball			100	107.6	5	Sinker	Infield shift	Standard	-125.42	198.27	-24.23721682
+field_out	0	fly_ball	201.34	90.74	325	88.5	27	4-Seam Fastball	Infield shift	Standard	75.92	107.53	26.41758753
+single	1	ground_ball	89.01	143.19	7	102.4	-18	Cutter	Standard	Standard	-36.41	55.08	-25.09967867
+grounded_into_double_play	0	ground_ball	86.12	159.06	7	90.2	-14	Cutter	Standard	Standard	-39.3	39.21	-33.79926077
+single	1	line_drive	183.21	110.42	210	99.7	11	Curveball	Infield shift	Standard	57.79	87.85	25.00346415
+field_out	0	fly_ball	167.75	56.04	367	98.1	38	Sinker	Infield shift	Standard	42.33	142.23	12.43040669
+field_out	0	ground_ball	151.16	144.79	22	104.2	-4	4-Seam Fastball	Infield shift	Standard	25.74	53.48	19.27618354
+field_out	0	line_drive	211.84	101.13	319	92.5	23	Cutter	Infield shift	Standard	86.42	97.14	31.24326963
+home_run	1	fly_ball	229	60.05	425	106	31	4-Seam Fastball	Standard	Standard	103.58	138.22	27.63550558
+field_out	0	ground_ball	145.66	168.03	4	70.4	-37	Cutter	Standard	Standard	20.24	30.24	25.34615757
+double	1	line_drive	189.84	62.99	369	100.7	21	Changeup	Infield shift	Standard	64.42	135.28	19.0977554
+single	1	ground_ball	68.25	114.03	127	103	7	Slider	Strategic	Standard	-57.17	84.24	-25.62226568
+field_out	0	ground_ball	153.04	131.37	28	106.4	-3	Changeup	Infield shift	Standard	27.62	66.9	16.82514597
+field_out	0	ground_ball	164.49	138.86	106	65.9	11	Cutter	Infield shift	Standard	39.07	59.41	24.99769167
+field_out	0	ground_ball	152.46	157.68	12	92.4	-4	Changeup	Infield shift	Standard	27.04	40.59	25.25288866
+single	1	fly_ball	82.25	125.68	211	64.5	34	Slider	Standard	Standard	-43.17	72.59	-23.05527993
+double	1	line_drive	176.01	59.34	366	105.4	20	4-Seam Fastball	Infield shift	Standard	50.59	138.93	15.00644956
+field_out	0	line_drive	62.83	97.63	295	86.7	21	4-Seam Fastball	Standard	Standard	-62.59	100.64	-23.90872139
+home_run	1	fly_ball	192.21	42.57	419	103.1	30	Changeup	Infield shift	Strategic	66.79	155.7	17.41326383
+field_out	0	ground_ball	95.93	141.84	14	95.9	-12	4-Seam Fastball	Standard	Standard	-29.49	56.43	-20.69348603
+grounded_into_double_play	0	ground_ball	159.33	167.46	17	96.5	-6	Changeup	Infield shift	Strategic	33.91	30.81	35.80672051
+field_out	0	ground_ball	94.45	168.42	4	93.4	-37	Slider	Standard	Standard	-30.97	29.85	-34.54123669
+field_out	0	fly_ball	167.33	85.33	299	81.5	30	Sinker	Infield shift	Standard	41.91	112.94	15.26923727
+sac_fly	0	line_drive	181.81	97.59	287	101.1	13	Slider	Infield shift	Strategic	56.39	100.68	21.93960891
+single	1	ground_ball	79.46	158.63	33	105.6	-3	Changeup	Standard	Standard	-45.96	39.64	-36.91694073
+double	1	line_drive	21.76	101.42	157	112.1	8	Changeup	Infield shift	Standard	-103.66	96.85	-35.20890854
+field_out	0	line_drive	46.19	94	324	99.5	18	Changeup	Infield shift	Standard	-79.23	104.27	-27.92215447
+field_out	0	fly_ball	28.37	100.86	339	92.2	27	Knuckle Curve	Standard	Standard	-97.05	97.41	-33.67044717
+field_out	0	fly_ball	179.16	83	315	97.8	43	Slider	Infield shift	Standard	53.74	115.27	18.74654467
+single	1	line_drive	72.16	91.79	229	104.8	10	4-Seam Fastball	Infield shift	Standard	-53.26	106.48	-19.93024497
+force_out	0	ground_ball	157.36	162.6	10	95.5	-16	4-Seam Fastball	Infield shift	Standard	31.94	35.67	31.3816725
+field_out	0	fly_ball	65.2	84.77	319	90.1	37	4-Seam Fastball	Standard	Standard	-60.22	113.5	-20.96190033
+double	1	fly_ball	46.76	59.18	394	106.8	36	4-Seam Fastball	Standard	Standard	-78.66	139.09	-22.11719746
+force_out	0	ground_ball	109.68	142.8	72	76.5	6	Slider	Standard	Standard	-15.74	55.47	-11.88124585
+field_out	0	ground_ball	155.87	133.33	115	101.3	7	Sinker	Infield shift	Standard	30.45	64.94	18.84121193
+home_run	1	fly_ball	52.44	41.3	429	108.9	25	4-Seam Fastball	Standard	Standard	-72.98	156.97	-18.70133345
+single	1	ground_ball	74.77	114.72	102	111	4	Changeup	Standard	Standard	-50.65	83.55	-23.41893113
+field_out	0	fly_ball	119.15	100.41	255	85.8	47	Slider	Standard	Standard	-6.27	97.86	-2.749495444
+field_out	0	line_drive	54.72	97.8	305	112.1	14	Sinker	Standard	Standard	-70.7	100.47	-26.35032695
+double	1	ground_ball	194.85	117.25	17	100.7	-8	4-Seam Fastball	Infield shift	Standard	69.43	81.02	30.44616585
+double	1	line_drive	87.86	73.23	290	107.9	13	Changeup	Standard	Standard	-37.56	125.04	-12.53956543
+double	1	line_drive	44.87	125.47	225	92.4	14	Slider	Infield shift	Standard	-80.55	72.8	-35.91986385
+field_out	0	line_drive	172.44	129.17	210	99.3	13	Changeup	Infield shift	Standard	47.02	69.1	25.67538152
+home_run	1	fly_ball	209.64	77.17	361	95.8	28	4-Seam Fastball	Infield shift	Standard	84.22	121.1	26.11275211
+field_out	0	popup	173.21	182.58	124	97.1	70	4-Seam Fastball	Infield shift	Standard	47.79	15.69	53.86830309
+field_out	0	fly_ball	159.96	130.4	221	92.9	55	4-Seam Fastball	Infield shift	Standard	34.54	67.87	20.22913866
+field_out	0	ground_ball	144.34	159.83	38	100.7	-1	Changeup	Infield shift	Standard	18.92	38.44	19.65465724
+grounded_into_double_play	0	ground_ball	148.47	170.34	16	79.3	-4	Changeup	Infield shift	Standard	23.05	27.93	29.64906735
+home_run	1	fly_ball	210.71	66.73	387	104.5	25	4-Seam Fastball	Infield shift	Standard	85.29	131.54	24.71940818
+double	1	line_drive	203.55	106.42	298	100.6	17	4-Seam Fastball	Infield shift	Standard	78.13	91.85	30.28901517
+field_out	0	ground_ball	105.95	168.88	12	97.8	-7	Changeup	Standard	Standard	-19.47	29.39	-25.14246581
+field_out	0	popup	117.05	179.6	60	65.9	75	Changeup	Standard	Standard	-8.37	18.67	-18.11047819
+field_out	0	popup	107.51	167.59	97	70.1	66	4-Seam Fastball	Standard	Standard	-17.91	30.68	-22.70625913
+home_run	1	fly_ball	232.29	71.93	407	108.5	24	4-Seam Fastball	Infield shift	Strategic	106.87	126.34	30.17071162
+single	1	ground_ball	107.64	175.06	1	72.2	-49	Knuckle Curve	Standard	Strategic	-17.78	23.21	-28.09041623
+field_out	0	popup	121.21	206.45	13	77	81	4-Seam Fastball	Strategic	Standard	-4.21	-8.18	20.42513852
+field_out	0	fly_ball	156.13	112.08	231	89.2	54	Cutter	Infield shift	Standard	30.71	86.19	14.70846007
+single	1	line_drive	86.83	124.97	249	88	18	4-Seam Fastball	Strategic	Standard	-38.59	73.3	-20.82397915
+double	1	line_drive	196.73	124.89	253	101.4	13	4-Seam Fastball	Infield shift	Standard	71.31	73.38	33.13526761
+home_run	1	fly_ball	231.03	79.78	390	103.3	38	4-Seam Fastball	Infield shift	Standard	105.61	118.49	31.28293618
+field_out	0	fly_ball	196.8	87.83				4-Seam Fastball	Infield shift	Standard	71.38	110.44	24.65666081
+field_out	0	ground_ball	151.65	167.32	64	69.6	5	4-Seam Fastball	Infield shift	Strategic	26.23	30.95	30.21085602
+field_out	0	line_drive	111	147	192	106.3	9	Sinker	Standard	Standard	-14.42	51.27	-11.78172109
+home_run	1	fly_ball	212.4	83.61	356	96.2	33	Changeup	Infield shift	Strategic	86.98	114.66	27.88770956
+field_out	0	ground_ball	165.63	153.98	6	98.8	-11	Split-Finger	Infield shift	Standard	40.21	44.29	31.67675707
+home_run	1	line_drive	223.84	63.19	411	108.6	22	4-Seam Fastball	Infield shift	Standard	98.42	135.08	27.05795865
+field_out	0	line_drive	158.02	161.44	127	72.2	13	4-Seam Fastball	Infield shift	Standard	32.6	36.83	31.13518709
+field_out	0	ground_ball	163.13	138.82	114	110.3	6	Sinker	Infield shift	Standard	37.71	59.45	24.29066302
+field_out	0	line_drive	171.29	81.54	311	89.5	21	Sinker	Infield shift	Standard	45.87	116.73	16.0895607
+home_run	1	line_drive	231.93	83.28	340	101.2	25	Knuckle Curve	Infield shift	Standard	106.51	114.99	32.10565111
+single	1	line_drive	164.96	112.77	256	92.6	17	Curveball	Infield shift	Standard	39.54	85.5	18.61385336
+field_out	0	ground_ball	169.84	126.5	118	103.4	6	4-Seam Fastball	Infield shift	Standard	44.42	71.77	23.81569347
+triple	1	fly_ball	182.33	56.54	377	102.5	37	Knuckle Curve	Infield shift	Standard	56.91	141.73	16.40800664
+field_out	0	line_drive	170.43	128.3	155	108.4	10	Sinker	Infield shift	Standard	45.01	69.97	24.56414364
+field_out	0	ground_ball	159.75	141.98	49	98.7	1	Curveball	Infield shift	Standard	34.33	56.29	23.5335541
+force_out	0	ground_ball	149.14	163.18	20	105.4	-5	Sinker	Infield shift	Standard	23.72	35.09	25.54331399
+double	1	line_drive	193.68	122.58	236	71.9	27	Changeup	Infield shift	Standard	68.26	75.69	31.53396909
+field_out	0	line_drive	83.58	153.91	156	96.6	11	4-Seam Fastball	Standard	Standard	-41.84	44.36	-32.49410453
+field_out	0	line_drive	161.33	156.81	140	95.3	8	4-Seam Fastball	Standard	Standard	35.91	41.46	30.67276242
+home_run	1	fly_ball	43.1	50.1	420	106.4	29	Cutter	Standard	Standard	-82.32	148.17	-21.79169179
+field_out	0	fly_ball	90.12	76.54	316	98.6	44	Slider	Standard	Standard	-35.3	121.73	-12.1285657
+single	1	line_drive	193.2	108.64	193	88.5	12	Curveball	Infield shift	Standard	67.78	89.63	27.82297584
+single	1	line_drive	187.33	117.61	226	72.2	22	Changeup	Infield shift	Standard	61.91	80.66	28.13083568
+field_out	0	ground_ball	100.19	158.58	8	81.7	-14	4-Seam Fastball	Standard	Standard	-25.23	39.69	-24.33237082
+home_run	1	fly_ball	202.76	59.82	392	104.5	33	4-Seam Fastball	Strategic	Standard	77.34	138.45	21.89122709
+field_error	N/A	ground_ball	167.28	159.83	9	96.4	-7	4-Seam Fastball	Standard	Standard	41.86	38.44	35.57907734
+field_out	0	line_drive	58.4	91.63	313	110.6	17	4-Seam Fastball	Standard	Standard	-67.02	106.64	-24.11108523
+field_out	0	fly_ball	61.98	88.55	315	85.6	29	Slider	Standard	Standard	-63.44	109.72	-22.52734527
+field_out	0	popup	121.31	217.76	36	72.8	86	Slider	Standard	Standard	-4.11	-19.49	8.930937843
+field_out	0	ground_ball	138.72	187.93	48	105.3	1	4-Seam Fastball	Infield shift	Standard	13.3	10.34	39.102711
+field_out	0	ground_ball	110.53	185.54	2	71.6	-56	Sinker	Standard	Strategic	-14.89	12.73	-37.10375199
+field_out	0	fly_ball	56.94	83.54	331	89.6	35	4-Seam Fastball	Infield shift	Standard	-68.48	114.73	-23.12408754
+field_out	0	ground_ball	98.61	145.01	18	91.6	-7	Changeup	Infield shift	Standard	-26.81	53.26	-20.03981496
+field_out	0	ground_ball	162.75	150.89	7	84.8	-24	4-Seam Fastball	Infield shift	Standard	37.33	47.38	28.67553846
+single	1	ground_ball	155.89	162.73	121	84.3	9	Changeup	Infield shift	Standard	30.47	35.54	30.45594919
+home_run	1	fly_ball	218.82	89.11	355	107.9	39	Sinker	Infield shift	Standard	93.4	109.16	30.41333673
+home_run	1	line_drive	210.04	62.59	367	108.2	20	Slider	Infield shift	Standard	84.62	135.68	23.96301799
+single	1	line_drive	158.54	114.71	166	105.7	9	Sinker	Infield shift	Standard	33.12	83.56	16.21611584
+double	1	ground_ball	49.64	124.45	64	94.1	2	Slider	Standard	Standard	-75.78	73.82	-34.31296776
+field_out	0	ground_ball	106.27	150.36	14	88.2	-5	Slider	Infield shift	Standard	-19.15	47.91	-16.34023103
+single	1	line_drive	64.37	103.7	201	110.4	10	4-Seam Fastball	Infield shift	Standard	-61.05	94.57	-24.63330654
+field_out	0	ground_ball	160.71	143.49	113	82.2	8	Slider	Infield shift	Standard	35.29	54.78	24.59262713
+single	1	ground_ball	90.74	164.91	15	86.8	-12	4-Seam Fastball	Infield shift	Standard	-34.68	33.36	-34.58356418
+field_out	0	popup	106.15	130.56	181	65.4	48	4-Seam Fastball	Infield shift	Standard	-19.27	67.71	-11.91460864

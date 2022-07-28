@@ -1,0 +1,1004 @@
+<html>
+<head>
+<title>Hit Chance Estimation-Copy1.ipynb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #cc7832;}
+.s2 { color: #a9b7c6;}
+.s3 { color: #6a8759;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Hit Chance Estimation-Copy1.ipynb</font>
+</center></td></tr></table>
+<pre><span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">pandas </span><span class="s1">as </span><span class="s2">pd</span>
+<span class="s1">import </span><span class="s2">numpy </span><span class="s1">as </span><span class="s2">np</span>
+<span class="s0">#%% 
+#data = pd.read_csv('JoseRamirez-Batted-Ball-Data.txt',sep='\t',lineterminator='\n')</span>
+<span class="s2">data = pd.read_csv(</span><span class="s3">'data/2021_batted_ball_data.csv'</span><span class="s2">)</span>
+<span class="s2">data.shape</span>
+<span class="s0">#%% 
+</span><span class="s2">data.head()</span>
+<span class="s0">#%% 
+</span><span class="s2">data.drop(</span><span class="s3">'Unnamed: 0'</span><span class="s1">, </span><span class="s2">axis=</span><span class="s4">1</span><span class="s1">, </span><span class="s2">inplace=</span><span class="s1">True</span><span class="s2">)</span>
+<span class="s2">data.index.names = [</span><span class="s3">'row_id'</span><span class="s2">]</span>
+<span class="s2">data.head()</span>
+<span class="s0">#%% 
+</span><span class="s2">data.columns</span>
+<span class="s0">#%% 
+</span><span class="s2">dt = data[[</span><span class="s3">'game_pk'</span><span class="s1">,</span><span class="s3">'game_date'</span><span class="s1">,</span><span class="s3">'home_team'</span><span class="s1">,</span><span class="s3">'away_team'</span><span class="s1">,</span><span class="s3">'player_name'</span>
+           <span class="s1">,</span><span class="s3">'inning'</span><span class="s1">, </span><span class="s3">'inning_topbot'</span><span class="s1">, </span><span class="s3">'outs_when_up'</span>
+           <span class="s1">,</span><span class="s3">'on_3b'</span><span class="s1">, </span><span class="s3">'on_2b'</span><span class="s1">, </span><span class="s3">'on_1b'</span>
+           <span class="s1">,</span><span class="s3">'if_fielding_alignment'</span><span class="s1">, </span><span class="s3">'of_fielding_alignment'</span>
+           <span class="s1">,</span><span class="s3">'launch_speed'</span><span class="s1">,</span><span class="s3">'launch_angle'</span><span class="s1">,</span><span class="s3">'hc_x'</span><span class="s1">,</span><span class="s3">'hc_y'</span>
+           <span class="s1">,</span><span class="s3">'bb_type'</span><span class="s1">, </span><span class="s3">'events'</span><span class="s2">]].copy()</span>
+<span class="s2">dt.head()</span>
+<span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">math</span>
+
+<span class="s2">dt[</span><span class="s3">'adj_hc_x'</span><span class="s2">] = (dt[</span><span class="s3">'hc_x'</span><span class="s2">] - </span><span class="s4">125.42</span><span class="s2">).astype(</span><span class="s3">'float'</span><span class="s2">)</span>
+<span class="s2">dt[</span><span class="s3">'adj_hc_y'</span><span class="s2">] = (</span><span class="s4">198.27 </span><span class="s2">- dt[</span><span class="s3">'hc_y'</span><span class="s2">]).astype(</span><span class="s3">'float'</span><span class="s2">)</span>
+
+<span class="s2">dt[</span><span class="s3">'spray_angle'</span><span class="s2">] = dt.apply(</span><span class="s1">lambda </span><span class="s2">x:</span>
+                             <span class="s2">float(</span><span class="s3">'NaN'</span><span class="s2">) </span><span class="s1">if </span><span class="s2">(math.isnan(x[</span><span class="s3">'adj_hc_x'</span><span class="s2">]) | math.isnan(x[</span><span class="s3">'adj_hc_y'</span><span class="s2">]))</span>
+                             <span class="s1">else </span><span class="s2">math.atan2(x[</span><span class="s3">'adj_hc_x'</span><span class="s2">]</span><span class="s1">, </span><span class="s2">x[</span><span class="s3">'adj_hc_y'</span><span class="s2">])</span><span class="s1">, </span><span class="s2">axis=</span><span class="s4">1</span><span class="s2">)*</span><span class="s4">180</span><span class="s2">/math.pi*</span><span class="s4">0.75</span>
+
+<span class="s2">dt[</span><span class="s3">'fielding_team'</span><span class="s2">] = np.where(dt[</span><span class="s3">'inning_topbot'</span><span class="s2">] == </span><span class="s3">'Top'</span><span class="s1">, </span><span class="s2">dt[</span><span class="s3">'home_team'</span><span class="s2">]</span><span class="s1">, </span><span class="s2">dt[</span><span class="s3">'away_team'</span><span class="s2">])</span>
+<span class="s2">dt[</span><span class="s3">'batter_at_home'</span><span class="s2">] = np.where(dt[</span><span class="s3">'inning_topbot'</span><span class="s2">] == </span><span class="s3">'Bot'</span><span class="s1">, </span><span class="s4">1.0</span><span class="s1">, </span><span class="s4">0.0</span><span class="s2">)</span>
+
+<span class="s2">dt.head(</span><span class="s4">150</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">dt[</span><span class="s3">'spray_angle'</span><span class="s2">].hist(bins=</span><span class="s4">45</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">dt.groupby(</span><span class="s3">'events'</span><span class="s2">).size()</span>
+<span class="s0">#%% 
+</span><span class="s2">dt[</span><span class="s3">'is_hit'</span><span class="s2">] = dt[</span><span class="s3">'events'</span><span class="s2">].map(</span>
+    <span class="s2">{</span><span class="s3">'catcher_interf'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'double'</span><span class="s2">: </span><span class="s4">1.</span>
+     <span class="s1">,</span><span class="s3">'double_play'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'field_error'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'field_out'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'fielders_choice'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'fielders_choice_out'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'force_out'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'grounded_into_double_play'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'home_run'</span><span class="s2">: </span><span class="s4">1.</span>
+     <span class="s1">,</span><span class="s3">'sac_bunt'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'sac_bunt_double_play'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'sac_fly'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'sac_fly_double_play'</span><span class="s2">: </span><span class="s4">0.</span>
+     <span class="s1">,</span><span class="s3">'single'</span><span class="s2">: </span><span class="s4">1.</span>
+     <span class="s1">,</span><span class="s3">'triple'</span><span class="s2">: </span><span class="s4">1.</span>
+     <span class="s1">,</span><span class="s3">'triple_play'</span><span class="s2">: </span><span class="s4">0.</span>
+    <span class="s2">})</span>
+
+<span class="s2">dt[</span><span class="s3">'is_hit_bool'</span><span class="s2">] = dt[</span><span class="s3">'is_hit'</span><span class="s2">]==</span><span class="s4">1</span>
+<span class="s0">#%% 
+</span><span class="s2">dt.head(</span><span class="s4">10</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">dt.columns.values.tolist().copy()</span>
+<span class="s0">#%% 
+</span><span class="s2">all_vars = dt.columns.values.tolist().copy()</span>
+
+<span class="s2">input_vars = [</span><span class="s3">'launch_speed'</span><span class="s1">, </span><span class="s3">'launch_angle'</span><span class="s1">, </span><span class="s3">'spray_angle'</span><span class="s1">, </span><span class="s3">'home_team'</span><span class="s1">, </span><span class="s3">'batter_at_home'</span><span class="s2">]</span>
+<span class="s2">input_vars_num = [</span><span class="s3">'launch_speed'</span><span class="s1">, </span><span class="s3">'launch_angle'</span><span class="s1">, </span><span class="s3">'spray_angle'</span><span class="s2">]</span>
+<span class="s2">input_vars_bin = [</span><span class="s3">'batter_at_home'</span><span class="s2">]</span>
+<span class="s2">input_vars_ctg = [</span><span class="s3">'home_team'</span><span class="s2">]</span>
+<span class="s2">output_vars = [</span><span class="s3">'is_hit'</span><span class="s2">]</span>
+<span class="s2">output_ctg_vars = [</span><span class="s3">'is_hit_bool'</span><span class="s2">]</span>
+<span class="s2">core_vars = input_vars + output_vars</span>
+<span class="s2">plot_vars = input_vars_num + output_ctg_vars</span>
+
+<span class="s2">print(</span><span class="s3">f'all variables: </span><span class="s1">{</span><span class="s2">all_vars</span><span class="s1">}\n</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f'input variables: </span><span class="s1">{</span><span class="s2">input_vars</span><span class="s1">}</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f'numerical input variables: </span><span class="s1">{</span><span class="s2">input_vars_num</span><span class="s1">}</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f'binary input variables: </span><span class="s1">{</span><span class="s2">input_vars_bin</span><span class="s1">}</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f'categorical input variables: </span><span class="s1">{</span><span class="s2">input_vars_ctg</span><span class="s1">}</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f'output variables: </span><span class="s1">{</span><span class="s2">output_vars</span><span class="s1">}</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f'output category variables: </span><span class="s1">{</span><span class="s2">output_ctg_vars</span><span class="s1">}</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f'core variables: </span><span class="s1">{</span><span class="s2">core_vars</span><span class="s1">}</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f'plot variables: </span><span class="s1">{</span><span class="s2">plot_vars</span><span class="s1">}</span><span class="s3">'</span><span class="s2">)</span>
+<span class="s0">#output_vars = list(dt.columns[3])</span>
+<span class="s0">#output_vars</span>
+<span class="s0">#%% 
+</span><span class="s2">ctg_val_colnames = []</span>
+<span class="s2">ctg_val_maps = {}</span>
+
+<span class="s1">for </span><span class="s2">category </span><span class="s1">in </span><span class="s2">input_vars_ctg:</span>
+
+    <span class="s2">ctg_val_maps[category] = {}</span>
+    
+    <span class="s2">ctg_val_maps[category][</span><span class="s3">'orig_name'</span><span class="s2">] = category</span>
+    
+    <span class="s0">#ctg_val_maps['orig_col_name'] = category</span>
+    
+    <span class="s2">ctg_val_colname = category + </span><span class="s3">'_ctg_val'</span>
+    <span class="s2">ctg_val_maps[category][</span><span class="s3">'ctg_val_name'</span><span class="s2">] = ctg_val_colname</span>
+    
+    <span class="s2">dt[ctg_val_colname] = dt[category].astype(</span><span class="s3">'category'</span><span class="s2">).cat.codes.values</span>
+    
+    <span class="s2">maps = dict(zip( dt[category]</span><span class="s1">, </span><span class="s2">dt[ctg_val_colname] ) )</span>
+    <span class="s2">ctg_val_maps[category][</span><span class="s3">'num_maps'</span><span class="s2">] = len(maps)</span>
+    <span class="s2">ctg_val_maps[category][</span><span class="s3">'orig_to_ctg_val_maps'</span><span class="s2">] = maps</span>
+    <span class="s0">#print(dict(enumerate(dt[category].cat.categories )))</span>
+    
+    <span class="s0">#dt[ctg_val_colname] = dt[category].cat.codes.values</span>
+    <span class="s2">ctg_val_colnames.append(ctg_val_colname)</span>
+
+<span class="s0">#%% 
+</span><span class="s2">ctg_val_maps</span>
+<span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">matplotlib.pyplot </span><span class="s1">as </span><span class="s2">plt</span>
+<span class="s2">plt.rcParams[</span><span class="s3">'figure.facecolor'</span><span class="s2">] = </span><span class="s3">'white'</span>
+<span class="s1">import </span><span class="s2">seaborn </span><span class="s1">as </span><span class="s2">sns</span>
+<span class="s0">#%% 
+</span><span class="s2">input_var_num = len(input_vars_num)</span>
+<span class="s2">subplot_rows = </span><span class="s4">2</span>
+<span class="s2">subplot_cols = input_var_num // </span><span class="s4">2 </span><span class="s2">+ (input_var_num % subplot_rows &gt; </span><span class="s4">0</span><span class="s2">)</span>
+
+<span class="s2">plt.figure(figsize=(</span><span class="s4">14</span><span class="s1">,</span><span class="s4">10</span><span class="s2">))</span>
+<span class="s2">plt.suptitle(</span><span class="s3">&quot;Input Data Histograms&quot;</span><span class="s1">, </span><span class="s2">size=</span><span class="s4">20</span><span class="s2">)</span>
+
+<span class="s1">for </span><span class="s2">n</span><span class="s1">, </span><span class="s2">input_var </span><span class="s1">in </span><span class="s2">enumerate(input_vars_num):</span>
+    <span class="s2">ax = plt.subplot(subplot_rows</span><span class="s1">, </span><span class="s2">subplot_cols</span><span class="s1">, </span><span class="s2">n+</span><span class="s4">1</span><span class="s2">)</span>
+    <span class="s2">plt.title(input_var)</span>
+    <span class="s2">dt[input_var].hist(bins=</span><span class="s4">35</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">dt_plot = dt[plot_vars].copy().dropna()</span>
+<span class="s0">#%% 
+</span><span class="s2">sns.set(font_scale=</span><span class="s4">1.5</span><span class="s2">)</span>
+
+<span class="s2">g = sns.PairGrid(dt_plot</span><span class="s1">, </span><span class="s2">vars = input_vars_num</span><span class="s1">, </span><span class="s2">hue = </span><span class="s3">'is_hit_bool'</span><span class="s1">, </span><span class="s2">palette=</span><span class="s3">&quot;deep&quot;</span><span class="s1">, </span><span class="s2">diag_sharey=</span><span class="s1">False</span><span class="s2">)</span>
+
+<span class="s2">g.map_offdiag(sns.scatterplot</span><span class="s1">, </span><span class="s2">size = </span><span class="s4">15</span><span class="s1">, </span><span class="s2">alpha = </span><span class="s4">0.3</span><span class="s2">)</span>
+<span class="s2">g.map_diag(sns.kdeplot</span><span class="s1">, </span><span class="s2">lw = </span><span class="s4">3.5</span><span class="s2">)</span>
+<span class="s2">g.add_legend()</span>
+<span class="s2">plt.gcf().set_size_inches(</span><span class="s4">15</span><span class="s1">,</span><span class="s4">10</span><span class="s2">)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s1">from </span><span class="s2">sklearn.model_selection </span><span class="s1">import </span><span class="s2">train_test_split</span>
+<span class="s1">from </span><span class="s2">sklearn.preprocessing </span><span class="s1">import </span><span class="s2">PowerTransformer</span>
+<span class="s0">#%% 
+# input_data, output_data = dt[input_vars_num + input_vars_bin], dt[output_vars]</span>
+<span class="s0"># print('input data:')</span>
+<span class="s0"># print(input_data.head(), end='\n\n')</span>
+<span class="s0"># print('output data:')</span>
+<span class="s0"># print(output_data.head())</span>
+<span class="s0">#%% 
+</span><span class="s2">dt_train</span><span class="s1">, </span><span class="s2">dt_test = train_test_split(dt</span><span class="s1">, </span><span class="s2">test_size=</span><span class="s4">0.2</span><span class="s1">, </span><span class="s2">random_state=</span><span class="s4">6879</span><span class="s2">)</span>
+<span class="s2">dt_train[</span><span class="s3">'dataset'</span><span class="s2">] = </span><span class="s3">'Train'</span>
+<span class="s2">dt_test[</span><span class="s3">'dataset'</span><span class="s2">] = </span><span class="s3">'Test'</span>
+<span class="s2">print(</span><span class="s3">f&quot;Train data's shape = </span><span class="s1">{</span><span class="s2">dt_train.shape</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+<span class="s2">print(</span><span class="s3">f&quot;Test data's shape = </span><span class="s1">{</span><span class="s2">dt_test.shape</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">dt = pd.concat((dt_train</span><span class="s1">, </span><span class="s2">dt_test))</span>
+<span class="s2">dt</span>
+<span class="s0">#%% 
+</span><span class="s1">del </span><span class="s2">dt_train</span><span class="s1">, </span><span class="s2">dt_test</span>
+<span class="s0">#%% 
+# # Do own splitting instead, this is ultimately inefficient in practice</span>
+<span class="s0"># X_train, X_test, y_train, y_test = train_test_split(input_data, output_data, test_size=0.2, random_state=64)</span>
+<span class="s0">#</span>
+<span class="s0"># print(f&quot;X_train's shape = {X_train.shape}&quot;)</span>
+<span class="s0"># print(f&quot;X_test's shape = {X_test.shape}&quot;)</span>
+<span class="s0"># print(f&quot;y_train's shape = {y_train.shape}&quot;)</span>
+<span class="s0"># print(f&quot;y_test's shape = {y_test.shape}&quot;)</span>
+<span class="s0">#</span>
+<span class="s0"># dt['dataset'] = ''</span>
+<span class="s0"># for i in y_train.index:</span>
+<span class="s0">#     dt['dataset'].iloc[i] = 'Train'</span>
+<span class="s0"># for i in y_test.index:</span>
+<span class="s0">#     dt['dataset'].iloc[i] = 'Test'</span>
+<span class="s0"># #dt.iloc[0]['game_pk']</span>
+<span class="s0">#%% 
+</span><span class="s2">dt.groupby(</span><span class="s3">'dataset'</span><span class="s2">).size()</span>
+<span class="s0">#%% 
+</span><span class="s2">pt = PowerTransformer(method = </span><span class="s3">'yeo-johnson'</span><span class="s2">)</span>
+<span class="s2">train_num_inputs_normed = pt.fit(dt[input_vars_num][dt[</span><span class="s3">'dataset'</span><span class="s2">]==</span><span class="s3">'Train'</span><span class="s2">])</span>
+<span class="s2">print(train_num_inputs_normed.lambdas_)</span>
+<span class="s0">#X_train_normed = pd.DataFrame(pt.fit_transform(X_train))</span>
+<span class="s0">#X_train_normed.hist()</span>
+<span class="s0">#%% 
+</span><span class="s2">input_vars_num_normed = [i + </span><span class="s3">&quot;_normed&quot; </span><span class="s1">for </span><span class="s2">i </span><span class="s1">in </span><span class="s2">input_vars_num]</span>
+<span class="s2">dt_normed_inputs = pd.DataFrame(pt.transform(dt[input_vars_num])</span><span class="s1">, </span><span class="s2">columns = input_vars_num_normed</span><span class="s1">, </span><span class="s2">index = dt.index)</span>
+<span class="s0">#X_train_normed = pd.DataFrame(pt.transform(X_train), columns = input_normed_colnames, index = X_train.index)</span>
+<span class="s0">#X_test_normed = pd.DataFrame(pt.transform(X_test), columns = input_normed_colnames, index = X_test.index)</span>
+<span class="s2">dt_normed_inputs</span>
+<span class="s0">#%% 
+</span><span class="s2">dt = pd.concat([dt</span><span class="s1">, </span><span class="s2">dt_normed_inputs]</span><span class="s1">, </span><span class="s2">axis=</span><span class="s4">1</span><span class="s2">)</span>
+<span class="s2">dt</span>
+<span class="s0">#train_data = pd.concat([X_train, X_train_normed, y_train], axis=1)</span>
+<span class="s0">#test_data = pd.concat([X_test, X_test_normed, y_test], axis=1)</span>
+<span class="s0">#%% 
+</span><span class="s2">dt_plot = dt[plot_vars + input_vars_num_normed].copy().dropna()</span>
+
+<span class="s2">sns.set(font_scale=</span><span class="s4">1.5</span><span class="s2">)</span>
+<span class="s2">g = sns.PairGrid(dt_plot</span><span class="s1">, </span><span class="s2">vars = input_vars_num_normed</span><span class="s1">, </span><span class="s2">hue = </span><span class="s3">'is_hit_bool'</span><span class="s1">, </span><span class="s2">palette=</span><span class="s3">&quot;deep&quot;</span><span class="s1">, </span><span class="s2">diag_sharey=</span><span class="s1">False</span><span class="s2">)</span>
+
+<span class="s2">g.map_offdiag(sns.scatterplot</span><span class="s1">, </span><span class="s2">size = </span><span class="s4">15</span><span class="s1">, </span><span class="s2">alpha = </span><span class="s4">0.3</span><span class="s2">)</span>
+<span class="s2">g.map_diag(sns.kdeplot</span><span class="s1">, </span><span class="s2">lw = </span><span class="s4">3.5</span><span class="s2">)</span>
+<span class="s2">g.add_legend()</span>
+<span class="s2">plt.gcf().set_size_inches(</span><span class="s4">15</span><span class="s1">,</span><span class="s4">10</span><span class="s2">)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">torch</span>
+<span class="s1">from </span><span class="s2">torch </span><span class="s1">import </span><span class="s2">nn</span>
+<span class="s1">from </span><span class="s2">collections </span><span class="s1">import </span><span class="s2">OrderedDict</span>
+<span class="s1">from </span><span class="s2">torch.utils.data </span><span class="s1">import </span><span class="s2">DataLoader</span>
+<span class="s1">import </span><span class="s2">torch_optimizer </span><span class="s1">as </span><span class="s2">torch_opts</span>
+<span class="s0">#%% 
+</span><span class="s2">device = </span><span class="s3">&quot;cuda&quot; </span><span class="s1">if </span><span class="s2">torch.cuda.is_available() </span><span class="s1">else </span><span class="s3">&quot;cpu&quot;</span>
+<span class="s2">print(</span><span class="s3">f&quot;Using </span><span class="s1">{</span><span class="s2">device</span><span class="s1">} </span><span class="s3">device&quot;</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">df_to_tensor_float(df):</span>
+    <span class="s2">dv = device</span>
+    <span class="s1">return </span><span class="s2">torch.from_numpy(df.values).float().to(dv)</span>
+
+<span class="s1">def </span><span class="s2">df_to_tensor_int(df):</span>
+    <span class="s2">dv = device</span>
+    <span class="s1">return </span><span class="s2">torch.from_numpy(df.values).int().to(dv)</span>
+<span class="s0">#%% 
+</span><span class="s2">model_train_data = dt[input_vars_num_normed + output_vars][dt[</span><span class="s3">'dataset'</span><span class="s2">]==</span><span class="s3">'Train'</span><span class="s2">].copy().dropna()</span>
+
+<span class="s0">#X_train_num_tensor = df_to_tensor_float(model_train_data[input_vars_num_normed + input_vars_bin])</span>
+<span class="s0">#X_train_ctg_tensor = df_to_tensor_int(model_train_data[ctg_val_colnames])</span>
+<span class="s2">X_train_num_tensor = df_to_tensor_float(model_train_data[input_vars_num_normed])</span>
+<span class="s2">y_train_tensor = df_to_tensor_float(model_train_data[output_vars])</span>
+
+<span class="s2">model_test_data = dt[input_vars_num_normed + output_vars][dt[</span><span class="s3">'dataset'</span><span class="s2">]==</span><span class="s3">'Test'</span><span class="s2">].copy().dropna()</span>
+
+<span class="s0">#X_test_num_tensor = df_to_tensor_float(model_test_data[input_vars_num_normed + input_vars_bin])</span>
+<span class="s0">#X_test_ctg_tensor = df_to_tensor_int(model_test_data[ctg_val_colnames])</span>
+<span class="s2">X_test_num_tensor = df_to_tensor_float(model_test_data[input_vars_num_normed])</span>
+<span class="s2">y_test_tensor = df_to_tensor_float(model_test_data[output_vars])</span>
+<span class="s0">#%% 
+</span><span class="s2">X_test_num_tensor</span>
+<span class="s0">#%% 
+# Next, need to figure out how to create a nn that uses these to create embeddings.</span>
+<span class="s0"># Might need to leave sequential construction behind. Yuricat's MuZero may be a useful reference.</span>
+<span class="s0"># Also, see: https://stackabuse.com/introduction-to-pytorch-for-classification/</span>
+<span class="s0">#%% 
+</span><span class="s1">class </span><span class="s2">Model(nn.Module):</span>
+    
+    <span class="s1">def </span><span class="s2">__init__(self</span><span class="s1">, </span><span class="s2">embedding_size</span><span class="s1">, </span><span class="s2">num_numerical_cols</span><span class="s1">, </span><span class="s2">output_size</span><span class="s1">, </span><span class="s2">layers</span><span class="s1">, </span><span class="s2">dropout_p = </span><span class="s1">None</span><span class="s2">):</span>
+        <span class="s2">super().__init__()</span>
+        
+        <span class="s2">self.all_embeddings = nn.ModuleList</span>
+<span class="s0">#%% 
+# import pandas as pd</span>
+<span class="s0"># import numpy as np</span>
+<span class="s1">import </span><span class="s2">torch</span>
+<span class="s1">import </span><span class="s2">torch.nn </span><span class="s1">as </span><span class="s2">nn</span>
+<span class="s1">import </span><span class="s2">torch.optim </span><span class="s1">as </span><span class="s2">optim</span>
+<span class="s1">import </span><span class="s2">torch.utils.data</span>
+<span class="s1">import </span><span class="s2">optuna</span>
+<span class="s2">optuna.logging.set_verbosity(optuna.logging.WARNING)</span>
+<span class="s1">import </span><span class="s2">plotly</span>
+<span class="s1">import </span><span class="s2">re</span>
+<span class="s1">import </span><span class="s2">time</span>
+<span class="s1">import </span><span class="s2">copy</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">init_weights(model):</span>
+    <span class="s1">if </span><span class="s2">isinstance(model</span><span class="s1">, </span><span class="s2">nn.Linear):</span>
+        <span class="s0">#inits weights in linear layers using xavier normal approach, and sets biases to 0</span>
+        <span class="s2">torch.nn.init.xavier_normal_(model.weight)</span>
+        <span class="s2">model.bias.data.fill_(</span><span class="s4">0.00</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">build_model(model_arch_params):</span>
+    
+    <span class="s0">#rebuild to allow for more than 1 hidden layer</span>
+    
+    <span class="s0">#get basic architecture info</span>
+    <span class="s2">in_features = model_arch_params[</span><span class="s3">'in_features'</span><span class="s2">]</span>
+    <span class="s2">out_features = model_arch_params[</span><span class="s3">'out_features'</span><span class="s2">]</span>
+    <span class="s2">num_hidden_layers = model_arch_params[</span><span class="s3">'hidden_layers'</span><span class="s2">]</span>
+    
+    <span class="s0">#get hidden layer sizes</span>
+    <span class="s2">re_hl_sizes = re.compile(</span><span class="s3">&quot;hl_.*_neurons&quot;</span><span class="s2">)</span>
+    <span class="s2">hl_sizes_filt = filter(re_hl_sizes.match</span><span class="s1">, </span><span class="s2">model_arch_params.keys())</span>
+    <span class="s2">hl_sizes = [model_arch_params[key] </span><span class="s1">for </span><span class="s2">key </span><span class="s1">in </span><span class="s2">hl_sizes_filt]</span>
+    <span class="s0">#print(hl_sizes)</span>
+    
+    <span class="s2">all_layer_sizes = [in_features] + hl_sizes + [out_features]</span>
+    <span class="s2">num_all_layers = len(all_layer_sizes)</span>
+    <span class="s0">#print(&quot;all layer sizes: &quot;, all_layer_sizes, &quot;, num layers: &quot;, num_all_layers)</span>
+    
+    <span class="s2">model_seq_arch = OrderedDict()</span>
+    <span class="s1">for </span><span class="s2">i </span><span class="s1">in </span><span class="s2">range(num_all_layers-</span><span class="s4">1</span><span class="s2">):</span>
+        <span class="s1">if </span><span class="s2">i == </span><span class="s4">0</span><span class="s2">:</span>
+            <span class="s2">model_seq_arch[</span><span class="s3">&quot;lin_in-&gt;hl1&quot;</span><span class="s2">] = nn.Linear(all_layer_sizes[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">, </span><span class="s2">all_layer_sizes[</span><span class="s4">1</span><span class="s2">])</span>
+            <span class="s2">model_seq_arch[</span><span class="s3">&quot;tanh_hl1&quot;</span><span class="s2">] = nn.Tanh()</span>
+        <span class="s1">elif </span><span class="s2">(i &gt; </span><span class="s4">0</span><span class="s2">) &amp; (i &lt;= num_all_layers-</span><span class="s4">3</span><span class="s2">):</span>
+            <span class="s2">model_seq_arch[</span><span class="s3">f&quot;lin_hl</span><span class="s1">{</span><span class="s2">i</span><span class="s1">}</span><span class="s3">-&gt;hl</span><span class="s1">{</span><span class="s2">i+</span><span class="s4">1</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s2">] = nn.Linear(all_layer_sizes[i]</span><span class="s1">, </span><span class="s2">all_layer_sizes[i+</span><span class="s4">1</span><span class="s2">])</span>
+            <span class="s2">model_seq_arch[</span><span class="s3">f&quot;tanh_hl</span><span class="s1">{</span><span class="s2">i+</span><span class="s4">1</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s2">] = nn.Tanh()</span>
+        <span class="s1">elif </span><span class="s2">i == num_all_layers-</span><span class="s4">2</span><span class="s2">:</span>
+            <span class="s2">model_seq_arch[</span><span class="s3">f&quot;lin_hl</span><span class="s1">{</span><span class="s2">i</span><span class="s1">}</span><span class="s3">-&gt;out&quot;</span><span class="s2">] = nn.Linear(all_layer_sizes[i]</span><span class="s1">, </span><span class="s2">all_layer_sizes[i+</span><span class="s4">1</span><span class="s2">])</span>
+            <span class="s2">model_seq_arch[</span><span class="s3">f&quot;sig_out&quot;</span><span class="s2">] = nn.Sigmoid()</span>
+        <span class="s1">else</span><span class="s2">:</span>
+            <span class="s1">raise </span><span class="s2">Exception(</span><span class="s3">&quot;Unable to construct sequential model.&quot;</span><span class="s2">)</span>
+    <span class="s0">#print(model_seq_arch)</span>
+    
+    <span class="s0">#construct nn model using architecture info</span>
+    <span class="s2">model = nn.Sequential(model_seq_arch)</span>
+    
+    <span class="s0">#initialize random model weights using xavier normal approach</span>
+    <span class="s0">#model.apply(init_weights)</span>
+    
+    <span class="s1">return </span><span class="s2">model</span>
+
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">eval_model(model</span><span class="s1">, </span><span class="s2">x):</span>
+    <span class="s2">y_pred = model(x)</span>
+    <span class="s0">#loss = lossFunc(y_pred,y)</span>
+    <span class="s1">return </span><span class="s2">y_pred</span>
+
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">eval_and_get_train_test_loss_vals(model</span><span class="s1">, </span><span class="s2">lossFunc</span><span class="s1">, </span><span class="s2">X_train_tensor</span><span class="s1">, </span><span class="s2">X_test_tensor</span><span class="s1">, </span><span class="s2">y_train_tensor</span><span class="s1">, </span><span class="s2">y_test_tensor):</span>
+    
+    <span class="s1">with </span><span class="s2">torch.no_grad():</span>
+        <span class="s2">train_preds = eval_model(model</span><span class="s1">, </span><span class="s2">X_train_tensor)</span>
+        <span class="s2">train_loss = lossFunc(train_preds</span><span class="s1">, </span><span class="s2">y_train_tensor).item()</span>
+        <span class="s2">test_preds = eval_model(model</span><span class="s1">, </span><span class="s2">X_test_tensor)</span>
+        <span class="s2">test_loss = lossFunc(test_preds</span><span class="s1">, </span><span class="s2">y_test_tensor).item()</span>
+    
+    <span class="s1">return </span><span class="s2">train_loss</span><span class="s1">, </span><span class="s2">test_loss </span>
+
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">build_optim(model</span><span class="s1">, </span><span class="s2">opt_params):</span>
+    
+    <span class="s2">beta_1 = </span><span class="s4">1 </span><span class="s2">- opt_params[</span><span class="s3">'1-beta_1'</span><span class="s2">]</span>
+    <span class="s2">beta_2 = </span><span class="s4">1 </span><span class="s2">- opt_params[</span><span class="s3">'1-beta_2'</span><span class="s2">]</span>
+
+    <span class="s2">optimizer = torch.optim.AdamW(</span>
+        <span class="s2">model.parameters()</span>
+        <span class="s1">, </span><span class="s2">lr = opt_params[</span><span class="s3">'learning_rate'</span><span class="s2">]</span>
+        <span class="s1">, </span><span class="s2">betas = (beta_1</span><span class="s1">, </span><span class="s2">beta_2)</span>
+        <span class="s1">, </span><span class="s2">eps = </span><span class="s4">1e-08</span>
+        <span class="s1">, </span><span class="s2">weight_decay = opt_params[</span><span class="s3">'weight_decay'</span><span class="s2">]</span>
+        <span class="s1">, </span><span class="s2">amsgrad = opt_params[</span><span class="s3">'use_ams_grad'</span><span class="s2">]</span>
+    <span class="s2">)</span>
+    
+    <span class="s1">return </span><span class="s2">optimizer</span>
+
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">format_time_as_minsecs(tt_secs):</span>
+    <span class="s2">tt_minsecs = {</span>
+        <span class="s3">'mins'</span><span class="s2">: math.floor(tt_secs/</span><span class="s4">60</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s3">'secs'</span><span class="s2">: tt_secs % </span><span class="s4">60</span>
+    <span class="s2">}</span>
+    <span class="s1">return </span><span class="s2">tt_minsecs</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">train_and_evaluate(model</span><span class="s1">, </span><span class="s2">opt_params</span><span class="s1">, </span><span class="s2">epochs</span><span class="s1">, </span><span class="s2">print_results=</span><span class="s1">False, </span><span class="s2">chkpt_spacing=</span><span class="s1">None</span><span class="s2">):</span>
+
+    <span class="s0">#use_cuda = torch.cuda.is_available()</span>
+    <span class="s0">#device = torch.device(&quot;cuda&quot; if use_cuda else &quot;cpu&quot;)</span>
+    
+    <span class="s0">#change so that it prints losses at initialized state (epoch = 0), and applies backward() before printing/storing results</span>
+    
+    <span class="s0">#set up nn model, loss function, and get suggested optimizer params from optuna</span>
+    <span class="s2">model.to(</span><span class="s3">'cuda'</span><span class="s2">)</span>
+    <span class="s2">lossFunc = torch.nn.BCELoss().cuda()</span>
+    <span class="s2">optimizer = build_optim(model</span><span class="s1">, </span><span class="s2">opt_params)</span>
+    <span class="s0">#print(optimizer.state_dict())</span>
+    
+    <span class="s0">#train current model for specified number of epochs</span>
+    <span class="s0">#note: could extend by saving model state at checkpoints</span>
+    <span class="s1">if </span><span class="s2">print_results == </span><span class="s1">True</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Training model for </span><span class="s1">{</span><span class="s2">epochs</span><span class="s1">} </span><span class="s3">epochs...&quot;</span><span class="s2">)</span>
+
+    <span class="s1">if </span><span class="s2">chkpt_spacing </span><span class="s1">is None</span><span class="s2">:</span>
+        <span class="s2">start_time = time.perf_counter()</span>
+        <span class="s1">for </span><span class="s2">epoch_num </span><span class="s1">in </span><span class="s2">range(epochs):</span>
+            <span class="s2">model.train()</span>
+            <span class="s2">iter_preds = eval_model(model</span><span class="s1">, </span><span class="s2">X_train_num_tensor)</span>
+            <span class="s2">iter_loss = lossFunc(iter_preds</span><span class="s1">, </span><span class="s2">y_train_tensor)</span>
+            <span class="s2">optimizer.zero_grad(set_to_none=</span><span class="s1">True</span><span class="s2">)</span>
+            <span class="s2">iter_loss.backward()</span>
+            <span class="s2">optimizer.step()</span>
+
+        <span class="s2">tt_secs_total = time.perf_counter() - start_time</span>
+
+
+    <span class="s1">if </span><span class="s2">chkpt_spacing </span><span class="s1">is not None</span><span class="s2">:</span>
+
+        <span class="s2">tt_secs_total = </span><span class="s4">0</span>
+
+        <span class="s1">for </span><span class="s2">epoch_num </span><span class="s1">in </span><span class="s2">range(epochs):</span>
+            <span class="s2">start_time = time.perf_counter()</span>
+
+            <span class="s2">model.train()</span>
+            <span class="s2">iter_preds = eval_model(model</span><span class="s1">, </span><span class="s2">X_train_num_tensor)</span>
+            <span class="s2">iter_loss = lossFunc(iter_preds</span><span class="s1">, </span><span class="s2">y_train_tensor)</span>
+
+            <span class="s2">tt_secs_total += (time.perf_counter() - start_time)</span>
+            <span class="s0">#print(f&quot;Iter {epoch_num}, eval preds/loss, {tt_secs_total}, {start_time}&quot;)</span>
+
+            <span class="s1">if </span><span class="s2">(epoch_num+</span><span class="s4">1</span><span class="s2">)%chkpt_spacing==</span><span class="s4">0 </span><span class="s2">:</span>
+                <span class="s2">model.eval()</span>
+                <span class="s1">with </span><span class="s2">torch.no_grad():</span>
+                    <span class="s2">train_preds = eval_model(model</span><span class="s1">, </span><span class="s2">X_train_num_tensor)</span>
+                    <span class="s2">train_loss = lossFunc(train_preds</span><span class="s1">, </span><span class="s2">y_train_tensor).item()</span>
+                    <span class="s2">test_preds = eval_model(model</span><span class="s1">, </span><span class="s2">X_test_num_tensor)</span>
+                    <span class="s2">test_loss = lossFunc(test_preds</span><span class="s1">, </span><span class="s2">y_test_tensor).item()</span>
+
+                <span class="s2">print(</span><span class="s3">&quot;%dth epoch complete.</span><span class="s1">\t</span><span class="s3">Training loss = %.6f</span><span class="s1">\t</span><span class="s3">Test loss = %.6f</span><span class="s1">\t</span><span class="s3">Training time (secs) = %.3f&quot; </span><span class="s2">% (epoch_num + </span><span class="s4">1</span><span class="s1">, </span><span class="s2">train_loss</span><span class="s1">, </span><span class="s2">test_loss</span><span class="s1">, </span><span class="s2">tt_secs_total))</span>
+
+            <span class="s2">start_time = time.perf_counter()</span>
+
+            <span class="s2">model.train()</span>
+            <span class="s2">optimizer.zero_grad(set_to_none=</span><span class="s1">True</span><span class="s2">)</span>
+            <span class="s2">iter_loss.backward()</span>
+            <span class="s2">optimizer.step()</span>
+
+            <span class="s2">tt_secs_total += (time.perf_counter() - start_time)</span>
+            <span class="s0">#print(f&quot;Iter {epoch_num}, after opt step, {tt_secs_total}, {start_time}&quot;)</span>
+
+        <span class="s0">#tt_secs_total += time.perf_counter() - start_time</span>
+        <span class="s0">#print(f&quot;after training complete, {tt_secs_total}, {start_time}&quot;)</span>
+        
+    <span class="s0">#evaluate losses for training and test datasets</span>
+    <span class="s0">#note: could potentially extend by also returning variance of losses for each dataset,</span>
+    <span class="s0">#      which would then be targeted for minimization in optuna study</span>
+    <span class="s2">model.eval()</span>
+    <span class="s1">with </span><span class="s2">torch.no_grad():</span>
+        <span class="s2">train_preds = eval_model(model</span><span class="s1">, </span><span class="s2">X_train_num_tensor)</span>
+        <span class="s2">train_loss = lossFunc(train_preds</span><span class="s1">, </span><span class="s2">y_train_tensor).item()</span>
+        
+        <span class="s2">test_preds = eval_model(model</span><span class="s1">, </span><span class="s2">X_test_num_tensor)</span>
+        <span class="s2">test_loss = lossFunc(test_preds</span><span class="s1">, </span><span class="s2">y_test_tensor).item()</span>
+    
+    <span class="s1">if </span><span class="s2">print_results == </span><span class="s1">True</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">Done!</span><span class="s1">\n</span><span class="s3">&quot;</span><span class="s2">)</span>
+        <span class="s2">tt_minsecs = format_time_as_minsecs(tt_secs_total)</span>
+        <span class="s2">print(</span><span class="s3">&quot;Training time: %d minutes, %.1f seconds&quot; </span><span class="s2">% (tt_minsecs[</span><span class="s3">'mins'</span><span class="s2">]</span><span class="s1">, </span><span class="s2">tt_minsecs[</span><span class="s3">'secs'</span><span class="s2">]))</span>
+        <span class="s2">print(</span><span class="s3">&quot;Training loss = %.6f&quot; </span><span class="s2">% train_loss)</span>
+        <span class="s2">print(</span><span class="s3">&quot;Test loss = %.6f</span><span class="s1">\n</span><span class="s3">&quot; </span><span class="s2">% test_loss)</span>
+
+    <span class="s1">return </span><span class="s2">train_loss</span><span class="s1">, </span><span class="s2">test_loss</span><span class="s1">, </span><span class="s2">tt_secs_total</span>
+
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">apply_postrun_sleep(tt_secs=</span><span class="s1">None, </span><span class="s2">printout=</span><span class="s1">False</span><span class="s2">):</span>
+    <span class="s2">cutoff_1 = </span><span class="s4">30</span>
+    <span class="s2">cutoff_2 = </span><span class="s4">90</span>
+
+    <span class="s1">if </span><span class="s2">tt_secs </span><span class="s1">is None</span><span class="s2">: sleep_time = </span><span class="s4">5</span>
+    <span class="s1">elif </span><span class="s2">tt_secs &lt; cutoff_1: sleep_time = </span><span class="s4">0</span>
+    <span class="s1">elif </span><span class="s2">tt_secs &lt; cutoff_2: sleep_time = </span><span class="s4">2</span>
+    <span class="s1">else</span><span class="s2">: sleep_time = </span><span class="s4">5</span>
+
+    <span class="s1">if </span><span class="s2">printout == </span><span class="s1">True</span><span class="s2">: print(</span><span class="s3">&quot;Sleeping for %d seconds.&quot; </span><span class="s2">% sleep_time)</span>
+    <span class="s2">time.sleep(sleep_time)</span>
+
+    <span class="s1">return </span><span class="s2">sleep_time</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">objective(trial):</span>
+    
+    <span class="s2">print(</span><span class="s3">&quot;_&quot;</span><span class="s2">*</span><span class="s4">50</span><span class="s2">)</span>
+    <span class="s2">print(</span><span class="s3">&quot;_&quot;</span><span class="s2">*</span><span class="s4">50</span><span class="s2">)</span>
+    <span class="s2">print(</span><span class="s3">f&quot;</span><span class="s1">\n</span><span class="s3">Trial #</span><span class="s1">{</span><span class="s2">trial.number</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+    <span class="s2">print(</span><span class="s3">&quot;_&quot;</span><span class="s2">*</span><span class="s4">50</span><span class="s2">)</span>
+    
+    <span class="s2">train_losses = []</span>
+    <span class="s2">test_losses = []</span>
+    <span class="s2">training_times_secs = []</span>
+
+    
+    <span class="s0">#set optuna's search bounds for model arechitecture</span>
+    <span class="s2">print(</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">===== Model Architecture =====</span><span class="s1">\n</span><span class="s3">&quot;</span><span class="s2">)</span>
+    <span class="s2">model_arch_params = OrderedDict([</span>
+        <span class="s2">(</span><span class="s3">'in_features'</span><span class="s1">, </span><span class="s4">3</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'out_features'</span><span class="s1">, </span><span class="s4">1</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'hidden_layers'</span><span class="s1">, </span><span class="s2">trial.suggest_int(</span><span class="s3">'hidden_layers'</span><span class="s1">, </span><span class="s4">1</span><span class="s1">, </span><span class="s4">3</span><span class="s2">))</span>
+    <span class="s2">])</span>
+    <span class="s1">for </span><span class="s2">l </span><span class="s1">in </span><span class="s2">range(model_arch_params[</span><span class="s3">'hidden_layers'</span><span class="s2">]):</span>
+        <span class="s2">varname = </span><span class="s3">f&quot;hl_</span><span class="s1">{</span><span class="s2">l+</span><span class="s4">1</span><span class="s1">}</span><span class="s3">_neurons&quot;</span>
+        <span class="s2">model_arch_params[varname] = trial.suggest_int(varname</span><span class="s1">, </span><span class="s4">2</span><span class="s1">, </span><span class="s4">50</span><span class="s2">)</span>
+    
+    <span class="s2">base_model = build_model(model_arch_params)</span>
+    <span class="s1">for </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value </span><span class="s1">in </span><span class="s2">model_arch_params.items():</span>
+        <span class="s2">print(</span><span class="s3">&quot;{}: {}&quot;</span><span class="s2">.format(key</span><span class="s1">, </span><span class="s2">value))</span>
+    <span class="s0">#print()</span>
+    <span class="s0">#print(base_model)</span>
+    <span class="s2">trainable_parameters = filter(</span><span class="s1">lambda </span><span class="s2">p: p.requires_grad</span><span class="s1">, </span><span class="s2">base_model.parameters())</span>
+    <span class="s2">trainable_param_num = sum([np.prod(p.size()) </span><span class="s1">for </span><span class="s2">p </span><span class="s1">in </span><span class="s2">trainable_parameters])</span>
+    <span class="s2">print(</span><span class="s3">f&quot;</span><span class="s1">\n</span><span class="s3">Number of trainable model parameters: </span><span class="s1">{</span><span class="s2">trainable_param_num</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s2">)    </span>
+
+    <span class="s0">#set search bounds for optimizer settings</span>
+    <span class="s2">print(</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">===== Optimizer Settings =====</span><span class="s1">\n</span><span class="s3">&quot;</span><span class="s2">)</span>
+    <span class="s2">opt_params = OrderedDict([</span>
+        <span class="s2">(</span><span class="s3">'learning_rate'</span><span class="s1">, </span><span class="s2">trial.suggest_loguniform(</span><span class="s3">'learning_rate'</span><span class="s1">, </span><span class="s4">5e-5</span><span class="s1">, </span><span class="s4">5e-1</span><span class="s2">))</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'1-beta_1'</span><span class="s1">, </span><span class="s2">trial.suggest_loguniform(</span><span class="s3">'1-beta_1'</span><span class="s1">, </span><span class="s4">1e-5</span><span class="s1">, </span><span class="s4">5e-1</span><span class="s2">))</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'1-beta_2'</span><span class="s1">, </span><span class="s2">trial.suggest_loguniform(</span><span class="s3">'1-beta_2'</span><span class="s1">, </span><span class="s4">1e-6</span><span class="s1">, </span><span class="s4">5e-1</span><span class="s2">))</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'use_ams_grad'</span><span class="s1">, </span><span class="s2">trial.suggest_categorical(</span><span class="s3">'use_ams_grad'</span><span class="s1">, </span><span class="s2">[</span><span class="s1">True, False</span><span class="s2">]))</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'use_weight_decay'</span><span class="s1">, </span><span class="s2">trial.suggest_categorical(</span><span class="s3">'use_weight_decay'</span><span class="s1">, </span><span class="s2">[</span><span class="s1">True, False</span><span class="s2">]))</span>
+    <span class="s2">])</span>
+    <span class="s1">if </span><span class="s2">opt_params[</span><span class="s3">'use_weight_decay'</span><span class="s2">] == </span><span class="s1">False</span><span class="s2">:</span>
+         <span class="s2">opt_params[</span><span class="s3">'weight_decay'</span><span class="s2">] = </span><span class="s4">0</span>
+    <span class="s1">else</span><span class="s2">:</span>
+         <span class="s2">opt_params[</span><span class="s3">'weight_decay'</span><span class="s2">] = trial.suggest_loguniform(</span><span class="s3">'weight_decay'</span><span class="s1">, </span><span class="s4">1e-8</span><span class="s1">, </span><span class="s4">5e-1</span><span class="s2">)</span>
+    
+    <span class="s1">for </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value </span><span class="s1">in </span><span class="s2">opt_params.items():</span>
+        <span class="s2">print(</span><span class="s3">&quot;{}: {}&quot;</span><span class="s2">.format(key</span><span class="s1">, </span><span class="s2">value))    </span>
+    
+    
+    <span class="s0">#set search bounds for trial run settings</span>
+    <span class="s2">print(</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">===== Model Training =====</span><span class="s1">\n</span><span class="s3">&quot;</span><span class="s2">)</span>
+    <span class="s2">epochs = trial.suggest_int(</span><span class="s3">'epochs'</span><span class="s1">, </span><span class="s4">1e1</span><span class="s1">, </span><span class="s4">3e3</span><span class="s2">)</span>
+    <span class="s2">inits_per_trial = </span><span class="s4">3</span>
+    <span class="s2">print(</span><span class="s3">f&quot;Training </span><span class="s1">{</span><span class="s2">inits_per_trial</span><span class="s1">} </span><span class="s3">model(s) for </span><span class="s1">{</span><span class="s2">epochs</span><span class="s1">} </span><span class="s3">epochs each.&quot;</span><span class="s2">)  </span>
+
+    <span class="s3">''' 
+    build n models using the current suggested hyperparam configurations 
+    , then return the means of the training and testing losses 
+    note: could extend by additionally minimizing variances of losses 
+    '''</span>
+    
+    <span class="s1">for </span><span class="s2">i </span><span class="s1">in </span><span class="s2">range(inits_per_trial):</span>
+        <span class="s2">model = copy.deepcopy(base_model)</span>
+        <span class="s2">model.apply(init_weights)</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Training model </span><span class="s1">{</span><span class="s2">i+</span><span class="s4">1</span><span class="s1">} </span><span class="s3">of </span><span class="s1">{</span><span class="s2">inits_per_trial</span><span class="s1">}</span><span class="s3">... &quot;</span><span class="s1">, </span><span class="s2">end=</span><span class="s3">&quot;&quot;</span><span class="s2">)</span>
+        <span class="s2">train_loss</span><span class="s1">, </span><span class="s2">test_loss</span><span class="s1">, </span><span class="s2">tt_secs = train_and_evaluate(model</span><span class="s1">, </span><span class="s2">opt_params</span><span class="s1">, </span><span class="s2">epochs)</span>
+        <span class="s2">print(</span><span class="s3">&quot;Done!&quot;</span><span class="s2">)</span>
+
+        <span class="s2">apply_postrun_sleep(tt_secs)</span>
+
+        <span class="s2">train_losses.append(train_loss)</span>
+        <span class="s2">test_losses.append(test_loss)</span>
+        <span class="s2">training_times_secs.append(tt_secs)</span>
+
+
+    <span class="s2">training_times_mins = [tt/</span><span class="s4">60 </span><span class="s1">for </span><span class="s2">tt </span><span class="s1">in </span><span class="s2">training_times_secs]</span>
+    <span class="s2">sum_tt_secs = np.sum(training_times_secs)</span>
+    <span class="s2">sum_tt_minsecs = format_time_as_minsecs(sum_tt_secs)</span>
+
+    <span class="s2">avg_tt_secs = np.mean(training_times_secs)</span>
+    <span class="s2">avg_tt_mins = avg_tt_secs/</span><span class="s4">60</span>
+    <span class="s2">avg_tt_minsecs = format_time_as_minsecs(avg_tt_secs)</span>
+
+    <span class="s2">print(</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">Training times (mins):&quot;</span><span class="s1">, </span><span class="s2">training_times_mins)</span>
+    <span class="s2">print(</span><span class="s3">&quot;Total training time: %d minutes, %.1f seconds&quot; </span><span class="s2">% (sum_tt_minsecs[</span><span class="s3">'mins'</span><span class="s2">]</span><span class="s1">, </span><span class="s2">sum_tt_minsecs[</span><span class="s3">'secs'</span><span class="s2">]))</span>
+    <span class="s2">print(</span><span class="s3">&quot;Training time per initialization: %d minutes, %.1f seconds&quot; </span><span class="s2">% (avg_tt_minsecs[</span><span class="s3">'mins'</span><span class="s2">]</span><span class="s1">, </span><span class="s2">avg_tt_minsecs[</span><span class="s3">'secs'</span><span class="s2">]))</span>
+
+    <span class="s2">print(</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">===== Results =====</span><span class="s1">\n</span><span class="s3">&quot;</span><span class="s2">)</span>
+    <span class="s2">avg_train_loss = np.mean(train_losses)</span>
+    <span class="s2">avg_test_loss = np.mean(test_losses)</span>
+    <span class="s2">print(</span><span class="s3">&quot;Train losses:&quot;</span><span class="s1">, </span><span class="s2">train_losses)</span>
+    <span class="s2">print(</span><span class="s3">&quot;Test losses:&quot;</span><span class="s1">, </span><span class="s2">test_losses)</span>
+    <span class="s2">print(</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">Average train loss:&quot;</span><span class="s1">, </span><span class="s2">avg_train_loss)</span>
+    <span class="s2">print(</span><span class="s3">&quot;Average test loss:&quot;</span><span class="s1">, </span><span class="s2">avg_test_loss)</span>
+    <span class="s2">print()</span>
+
+    <span class="s1">return </span><span class="s2">avg_tt_mins</span><span class="s1">, </span><span class="s2">avg_test_loss</span>
+    <span class="s0">#return avg_train_loss, avg_test_loss</span>
+<span class="s0">#%% 
+</span><span class="s2">study = optuna.create_study(directions=(</span><span class="s3">&quot;minimize&quot;</span><span class="s1">,</span><span class="s3">&quot;minimize&quot;</span><span class="s2">)</span>
+                            <span class="s1">, </span><span class="s2">sampler=optuna.samplers.TPESampler(multivariate=</span><span class="s1">True, </span><span class="s2">n_startup_trials=</span><span class="s4">50</span><span class="s2">)</span>
+                            <span class="s1">, </span><span class="s2">storage=</span><span class="s3">&quot;sqlite:///studies/hit_chance/flexible-nn-arch_2021-data_MOTPE_v3.db&quot;</span>
+                            <span class="s1">, </span><span class="s2">study_name=</span><span class="s3">&quot;flexible-nn-arch_2021-data_MOTPE_v3&quot;</span>
+                           <span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">study = optuna.load_study(study_name=</span><span class="s3">&quot;flexible-nn-arch_2021-data_MOTPE_v1&quot;</span><span class="s1">, </span><span class="s2">storage=</span><span class="s3">&quot;sqlite:///studies/flexible-nn-arch_bat-at-home_2021-data_MOTPE_v1.db&quot;</span><span class="s2">)</span>
+<span class="s0">#study.optimize(objective, n_trials=30)</span>
+<span class="s0">#%% 
+</span><span class="s2">study.optimize(objective</span><span class="s1">, </span><span class="s2">n_trials=</span><span class="s4">1</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">run_optuna_study_for_set_time(study</span><span class="s1">, </span><span class="s2">objective</span><span class="s1">, </span><span class="s2">cutoff_time_mins</span><span class="s1">, </span><span class="s2">print_cml_times = </span><span class="s1">False</span><span class="s2">):</span>
+
+    <span class="s2">total_study_runtime_secs = </span><span class="s4">0</span>
+    <span class="s2">total_study_runtime_mins = </span><span class="s4">0</span>
+    <span class="s2">total_trials_completed = </span><span class="s4">0</span>
+
+    <span class="s1">while </span><span class="s2">total_study_runtime_mins &lt; cutoff_time_mins:</span>
+        <span class="s2">start_time = time.perf_counter()</span>
+        <span class="s2">study.optimize(objective</span><span class="s1">, </span><span class="s2">n_trials = </span><span class="s4">1</span><span class="s2">)</span>
+        <span class="s2">total_study_runtime_secs += time.perf_counter() - start_time</span>
+        <span class="s2">total_study_runtime_mins = total_study_runtime_secs/</span><span class="s4">60</span>
+        <span class="s2">total_trials_completed += </span><span class="s4">1</span>
+
+        <span class="s1">if </span><span class="s2">print_cml_times: print(</span><span class="s3">&quot;Study cumulative run time = %.1f minutes</span><span class="s1">\n</span><span class="s3">&quot; </span><span class="s2">% total_study_runtime_mins)</span>
+
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">&quot;#&quot;</span><span class="s2">*</span><span class="s4">50</span><span class="s2">)</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Cutoff of </span><span class="s1">{</span><span class="s2">cutoff_time_mins</span><span class="s1">} </span><span class="s3">minutes reached.&quot;</span><span class="s2">)</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Total trials completed: </span><span class="s1">{</span><span class="s2">total_trials_completed</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+        <span class="s2">print(</span><span class="s3">&quot;#&quot;</span><span class="s2">*</span><span class="s4">50</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">run_optuna_study_for_set_time(study</span><span class="s1">, </span><span class="s2">objective</span><span class="s1">, </span><span class="s2">cutoff_time_mins = </span><span class="s4">100</span><span class="s1">, </span><span class="s2">print_cml_times = </span><span class="s1">True</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">optuna.visualization.plot_optimization_history(</span>
+    <span class="s2">study</span>
+    <span class="s1">, </span><span class="s2">target = </span><span class="s1">lambda </span><span class="s2">t: t.values[</span><span class="s4">1</span><span class="s2">]</span>
+    <span class="s1">, </span><span class="s2">target_name = </span><span class="s3">'Test Loss'</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">optuna.visualization.plot_param_importances(</span>
+    <span class="s2">study</span>
+    <span class="s1">, </span><span class="s2">target = </span><span class="s1">lambda </span><span class="s2">t: t.values[</span><span class="s4">1</span><span class="s2">]</span>
+    <span class="s1">, </span><span class="s2">target_name = </span><span class="s3">'Test Loss'</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">optuna.visualization.plot_slice(</span>
+    <span class="s2">study</span>
+    <span class="s1">, </span><span class="s2">target = </span><span class="s1">lambda </span><span class="s2">t: t.values[</span><span class="s4">1</span><span class="s2">]</span>
+    <span class="s1">, </span><span class="s2">target_name = </span><span class="s3">'Test Loss'</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">optuna.visualization.plot_pareto_front(</span>
+    <span class="s2">study</span>
+    <span class="s1">,</span><span class="s2">target_names = [</span><span class="s3">'Training Time (mins)'</span><span class="s1">, </span><span class="s3">'Test Loss'</span><span class="s2">])</span>
+<span class="s0">#%% 
+#add ability to define weights here as well for random selection</span>
+<span class="s2">selected_trial_nums = [</span><span class="s4">249</span><span class="s1">, </span><span class="s4">134</span><span class="s1">, </span><span class="s4">124</span><span class="s1">, </span><span class="s4">141</span><span class="s1">, </span><span class="s4">57</span><span class="s1">, </span><span class="s4">248</span><span class="s2">]</span>
+<span class="s2">selected_trial_nums = np.sort(selected_trial_nums)</span>
+<span class="s2">trial_hist = study.trials_dataframe()</span>
+<span class="s2">trial_hist[trial_hist[</span><span class="s3">&quot;number&quot;</span><span class="s2">].isin(selected_trial_nums)]</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">get_params_as_sets(trial):</span>
+
+    <span class="s2">params = trial.params</span>
+    <span class="s0">#print(params)</span>
+    
+    <span class="s0">#change below to get values using list of keys specific to each  </span>
+    
+    <span class="s2">model_arch_params = OrderedDict([</span>
+        <span class="s2">(</span><span class="s3">'in_features'</span><span class="s1">, </span><span class="s4">3</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'out_features'</span><span class="s1">, </span><span class="s4">1</span><span class="s2">)</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'hidden_layers'</span><span class="s1">, </span><span class="s2">params[</span><span class="s3">'hidden_layers'</span><span class="s2">])</span>
+    <span class="s2">])</span>
+    <span class="s1">for </span><span class="s2">l </span><span class="s1">in </span><span class="s2">range(model_arch_params[</span><span class="s3">'hidden_layers'</span><span class="s2">]):</span>
+        <span class="s2">varname = </span><span class="s3">f&quot;hl_</span><span class="s1">{</span><span class="s2">l+</span><span class="s4">1</span><span class="s1">}</span><span class="s3">_neurons&quot;</span>
+        <span class="s2">model_arch_params[varname] = params[varname]</span>
+    <span class="s0">#print(model_arch_params)</span>
+    
+    <span class="s2">opt_params = OrderedDict([</span>
+        <span class="s2">(</span><span class="s3">'learning_rate'</span><span class="s1">, </span><span class="s2">params[</span><span class="s3">'learning_rate'</span><span class="s2">])</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'1-beta_1'</span><span class="s1">, </span><span class="s2">params[</span><span class="s3">'1-beta_1'</span><span class="s2">])</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'1-beta_2'</span><span class="s1">, </span><span class="s2">params[</span><span class="s3">'1-beta_2'</span><span class="s2">])</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'use_ams_grad'</span><span class="s1">, </span><span class="s2">params[</span><span class="s3">'use_ams_grad'</span><span class="s2">])</span><span class="s1">,</span>
+        <span class="s2">(</span><span class="s3">'use_weight_decay'</span><span class="s1">, </span><span class="s2">params[</span><span class="s3">'use_weight_decay'</span><span class="s2">])</span>
+    <span class="s2">])</span>
+    <span class="s1">if </span><span class="s2">opt_params[</span><span class="s3">'use_weight_decay'</span><span class="s2">] == </span><span class="s1">False</span><span class="s2">:</span>
+         <span class="s2">opt_params[</span><span class="s3">'weight_decay'</span><span class="s2">] = </span><span class="s4">0</span>
+    <span class="s1">else</span><span class="s2">:</span>
+         <span class="s2">opt_params[</span><span class="s3">'weight_decay'</span><span class="s2">] = params[</span><span class="s3">'weight_decay'</span><span class="s2">]</span>
+    <span class="s0">#print(opt_params)</span>
+    
+    <span class="s2">epochs = params[</span><span class="s3">'epochs'</span><span class="s2">]</span>
+    <span class="s0">#print(epochs)</span>
+    
+    <span class="s1">return </span><span class="s2">model_arch_params</span><span class="s1">, </span><span class="s2">opt_params</span><span class="s1">, </span><span class="s2">epochs</span>
+    <span class="s0">#model = build_model2(model_arch_params)</span>
+
+<span class="s0">#get_params_as_sets(study.trials[77])</span>
+<span class="s0">#%% 
+</span><span class="s1">for </span><span class="s2">i </span><span class="s1">in </span><span class="s2">selected_trial_nums:</span>
+    <span class="s2">trial_i = study.trials[i]</span>
+    <span class="s2">print(</span><span class="s3">f&quot;==Trial </span><span class="s1">{</span><span class="s2">i</span><span class="s1">}</span><span class="s3">==&quot;</span><span class="s2">)</span>
+    <span class="s2">hps_i = trial_i.params</span>
+    <span class="s1">for </span><span class="s2">key</span><span class="s1">, </span><span class="s2">value </span><span class="s1">in </span><span class="s2">hps_i.items():</span>
+        <span class="s2">print(</span><span class="s3">&quot;{}: {}&quot;</span><span class="s2">.format(key</span><span class="s1">, </span><span class="s2">value))</span>
+    
+    <span class="s2">model_arch_params</span><span class="s1">, </span><span class="s2">_</span><span class="s1">, </span><span class="s2">_ = get_params_as_sets(trial_i)</span>
+    <span class="s2">temp_model = build_model(model_arch_params)</span>
+    <span class="s2">trainable_params = filter(</span><span class="s1">lambda </span><span class="s2">p: p.requires_grad</span><span class="s1">, </span><span class="s2">temp_model.parameters())</span>
+    <span class="s2">param_ct = sum([np.prod(p.size()) </span><span class="s1">for </span><span class="s2">p </span><span class="s1">in </span><span class="s2">trainable_params])</span>
+    <span class="s2">print(</span><span class="s3">f&quot;# of trainable parameters: </span><span class="s1">{</span><span class="s2">param_ct</span><span class="s1">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+    <span class="s2">print(</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">&quot;</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">trial_num_to_test = </span><span class="s4">1</span>
+<span class="s2">model_arch_params_test</span><span class="s1">, </span><span class="s2">opt_params_test</span><span class="s1">, </span><span class="s2">_ = get_params_as_sets(study.trials[trial_num_to_test])</span>
+<span class="s2">test_model = build_model(model_arch_params_test)</span>
+<span class="s2">train_and_evaluate(test_model</span><span class="s1">, </span><span class="s2">opt_params_test</span><span class="s1">, </span><span class="s4">2500</span><span class="s1">, True, </span><span class="s4">1e3</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">random</span>
+
+<span class="s2">num_models = int(</span><span class="s4">20</span><span class="s2">)</span>
+
+<span class="s2">sampled_trial_nums = random.choices(selected_trial_nums</span><span class="s1">, </span><span class="s2">k=num_models)</span>
+<span class="s2">print(</span><span class="s3">&quot;Sampled trial #'s: &quot;</span><span class="s1">,</span><span class="s2">sampled_trial_nums</span><span class="s1">,</span><span class="s3">&quot;</span><span class="s1">\n</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+<span class="s2">freqs = {}</span>
+<span class="s1">for </span><span class="s2">item </span><span class="s1">in </span><span class="s2">sampled_trial_nums:</span>
+    <span class="s1">if </span><span class="s2">item </span><span class="s1">in </span><span class="s2">freqs:</span>
+        <span class="s2">freqs[item] += </span><span class="s4">1</span>
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">freqs[item] = </span><span class="s4">1</span>
+
+<span class="s1">for </span><span class="s2">key </span><span class="s1">in </span><span class="s2">sorted(freqs):</span>
+    <span class="s2">print(</span><span class="s3">&quot;Trial #&quot;</span><span class="s1">, </span><span class="s2">key</span><span class="s1">, </span><span class="s3">' : '</span><span class="s1">, </span><span class="s2">freqs[key]</span><span class="s1">, </span><span class="s3">'samples'</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">freqs</span>
+<span class="s0">#%% 
+#train_preds_df = pd.DataFrame()</span>
+<span class="s0">#test_preds_df = pd.DataFrame()</span>
+
+<span class="s2">ens_model_list = []</span>
+
+<span class="s1">for </span><span class="s2">i</span><span class="s1">, </span><span class="s2">tn </span><span class="s1">in </span><span class="s2">enumerate(sampled_trial_nums):</span>
+    
+    <span class="s2">trial_tn = study.trials[tn]</span>
+    <span class="s0">#params_tn = trial_tn.params</span>
+    <span class="s2">model_arch_params_tn</span><span class="s1">, </span><span class="s2">opt_params_tn</span><span class="s1">, </span><span class="s2">epochs_tn = get_params_as_sets(trial_tn)</span>
+    <span class="s2">model_tn = build_model(model_arch_params_tn)</span>
+    
+    <span class="s2">print(</span><span class="s3">&quot;_&quot;</span><span class="s2">*</span><span class="s4">40</span><span class="s2">)</span>
+    <span class="s2">print(</span><span class="s3">f&quot;Training model </span><span class="s1">{</span><span class="s2">i+</span><span class="s4">1</span><span class="s1">} </span><span class="s3">of </span><span class="s1">{</span><span class="s2">num_models</span><span class="s1">} </span><span class="s3">from trial #</span><span class="s1">{</span><span class="s2">tn</span><span class="s1">}</span><span class="s3">...&quot;</span><span class="s2">)</span>
+    <span class="s2">train_and_evaluate(model_tn</span><span class="s1">, </span><span class="s2">opt_params_tn</span><span class="s1">, </span><span class="s2">epochs_tn</span><span class="s1">, True, </span><span class="s4">1e3</span><span class="s2">)</span>
+    <span class="s0">#train_loss, test_loss = train_and_evaluate(params_tn, model_tn, True, 5e3)</span>
+    
+    <span class="s2">ens_model_list.append(model_tn)</span>
+    
+<span class="s0">#%% 
+</span><span class="s2">num_new_models = int(</span><span class="s4">3</span><span class="s2">)</span>
+<span class="s2">trial_num_to_use = </span><span class="s4">340</span>
+
+<span class="s2">prev_mdl_ct = len(ens_model_list)</span>
+
+<span class="s2">trial_tn = study.trials[trial_num_to_use]</span>
+<span class="s2">model_arch_params_tn</span><span class="s1">, </span><span class="s2">opt_params_tn</span><span class="s1">, </span><span class="s2">epochs_tn = get_params_as_sets(trial_tn)</span>
+
+<span class="s1">for </span><span class="s2">i </span><span class="s1">in </span><span class="s2">range(num_new_models):</span>
+    
+    <span class="s2">model_tn = build_model(model_arch_params_tn)</span>
+    <span class="s2">print(</span><span class="s3">f&quot;Training model </span><span class="s1">{</span><span class="s2">prev_mdl_ct+i+</span><span class="s4">1</span><span class="s1">} </span><span class="s3">of </span><span class="s1">{</span><span class="s2">prev_mdl_ct+num_new_models</span><span class="s1">} </span><span class="s3">from trial #</span><span class="s1">{</span><span class="s2">trial_num_to_use</span><span class="s1">}</span><span class="s3">...&quot;</span><span class="s2">)</span>
+    <span class="s2">train_and_evaluate(model_tn</span><span class="s1">, </span><span class="s2">opt_params_tn</span><span class="s1">, </span><span class="s2">epochs_tn</span><span class="s1">, True, </span><span class="s4">1e3</span><span class="s2">)</span>
+    <span class="s2">print(</span><span class="s3">&quot;_&quot;</span><span class="s2">*</span><span class="s4">40</span><span class="s2">)</span>
+    
+    <span class="s2">ens_model_list.append(model_tn)</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">show_models_params(model_list):</span>
+    <span class="s1">for </span><span class="s2">i</span><span class="s1">, </span><span class="s2">model </span><span class="s1">in </span><span class="s2">enumerate(model_list):</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Model </span><span class="s1">{</span><span class="s2">i+</span><span class="s4">1</span><span class="s1">} </span><span class="s3">params:&quot;</span><span class="s2">)</span>
+        <span class="s1">for </span><span class="s2">param </span><span class="s1">in </span><span class="s2">model.parameters():</span>
+            <span class="s2">print(param.data)</span>
+        <span class="s2">print()</span>
+        <span class="s2">print(</span><span class="s3">&quot;_&quot;</span><span class="s2">*</span><span class="s4">40</span><span class="s2">)</span>
+
+<span class="s2">show_models_params(ens_model_list)</span>
+<span class="s0">#%% 
+</span><span class="s1">def </span><span class="s2">infer_and_summarize(model_list</span><span class="s1">, </span><span class="s2">x</span><span class="s1">, </span><span class="s2">y=</span><span class="s1">None, </span><span class="s2">basic=</span><span class="s1">False</span><span class="s2">):</span>
+    
+    <span class="s2">has_y = y </span><span class="s1">is not None</span>
+    
+    <span class="s2">x_df = pd.DataFrame(x.reset_index()</span><span class="s1">, </span><span class="s2">columns = input_vars_num)</span>
+    <span class="s2">x_normed_df = pd.DataFrame(pt.transform(x_df)</span><span class="s1">, </span><span class="s2">columns = input_normed_colnames)</span>
+    <span class="s2">x_tensor = df_to_tensor_float(x_normed_df)</span>
+    <span class="s0">#if has_y: y_tensor = df_to_tensor_float(y)</span>
+
+    <span class="s2">pred_vals = pd.DataFrame()</span>
+
+    <span class="s1">for </span><span class="s2">i</span><span class="s1">, </span><span class="s2">model </span><span class="s1">in </span><span class="s2">enumerate(model_list):</span>
+
+        <span class="s2">model.eval()</span>
+        <span class="s1">with </span><span class="s2">torch.no_grad():</span>
+            <span class="s2">preds = model(x_tensor)</span>
+
+        <span class="s2">preds_dfi = pd.DataFrame(preds.detach().cpu().numpy()</span><span class="s1">, </span><span class="s2">columns = [v + </span><span class="s3">f&quot;_pred_mdl_</span><span class="s1">{</span><span class="s2">i+</span><span class="s4">1</span><span class="s1">}</span><span class="s3">&quot; </span><span class="s1">for </span><span class="s2">v </span><span class="s1">in </span><span class="s2">output_vars])</span>
+        <span class="s1">del </span><span class="s2">preds</span>
+
+        <span class="s1">if </span><span class="s2">pred_vals.size == </span><span class="s4">0</span><span class="s2">:</span>
+            <span class="s2">pred_vals = preds_dfi.copy()</span>
+        <span class="s1">else</span><span class="s2">:</span>
+            <span class="s2">pred_vals = pd.concat([pred_vals</span><span class="s1">, </span><span class="s2">preds_dfi]</span><span class="s1">,</span><span class="s2">axis=</span><span class="s4">1</span><span class="s2">)</span>
+
+    <span class="s2">preds_mean = pd.DataFrame(pred_vals.mean(axis=</span><span class="s4">1</span><span class="s2">)</span><span class="s1">, </span><span class="s2">columns = [v + </span><span class="s3">&quot;_pred_mean&quot; </span><span class="s1">for </span><span class="s2">v </span><span class="s1">in </span><span class="s2">output_vars])</span>
+    <span class="s2">preds_median = pd.DataFrame(pred_vals.median(axis=</span><span class="s4">1</span><span class="s2">)</span><span class="s1">, </span><span class="s2">columns = [v + </span><span class="s3">&quot;_pred_median&quot; </span><span class="s1">for </span><span class="s2">v </span><span class="s1">in </span><span class="s2">output_vars])</span>
+    <span class="s2">preds_variance = pd.DataFrame(pred_vals.var(axis=</span><span class="s4">1</span><span class="s2">)</span><span class="s1">, </span><span class="s2">columns = [v + </span><span class="s3">&quot;_pred_variance&quot; </span><span class="s1">for </span><span class="s2">v </span><span class="s1">in </span><span class="s2">output_vars])</span>
+
+    <span class="s1">if </span><span class="s2">(has_y </span><span class="s1">and </span><span class="s2">basic):</span>
+        <span class="s2">y_df = pd.DataFrame(y.reset_index()</span><span class="s1">, </span><span class="s2">columns = output_vars)</span>
+        <span class="s2">preds_df = pd.concat([x_df</span><span class="s1">, </span><span class="s2">preds_mean</span><span class="s1">, </span><span class="s2">preds_median</span><span class="s1">, </span><span class="s2">y_df]</span><span class="s1">, </span><span class="s2">axis=</span><span class="s4">1</span><span class="s2">)</span>
+        
+    <span class="s1">elif </span><span class="s2">(has_y </span><span class="s1">and not </span><span class="s2">basic):</span>
+        <span class="s2">y_df = pd.DataFrame(y.reset_index()</span><span class="s1">, </span><span class="s2">columns = output_vars)</span>
+        <span class="s2">to_cat_cols = [v + </span><span class="s3">&quot;_ctg&quot; </span><span class="s1">for </span><span class="s2">v </span><span class="s1">in </span><span class="s2">output_vars]</span>
+        <span class="s2">y_ctg_df = pd.DataFrame(y_df.to_numpy(copy = </span><span class="s1">True</span><span class="s2">)</span><span class="s1">, </span><span class="s2">columns = to_cat_cols)</span>
+
+        <span class="s2">preds_df = pd.concat([x_df</span><span class="s1">, </span><span class="s2">x_normed_df</span><span class="s1">, </span><span class="s2">pred_vals</span><span class="s1">, </span><span class="s2">preds_mean</span><span class="s1">, </span><span class="s2">preds_median</span><span class="s1">, </span><span class="s2">preds_variance</span><span class="s1">, </span><span class="s2">y_df</span><span class="s1">, </span><span class="s2">y_ctg_df]</span><span class="s1">, </span><span class="s2">axis=</span><span class="s4">1</span><span class="s2">)</span>
+        <span class="s2">preds_df[to_cat_cols] = preds_df[to_cat_cols].astype(</span><span class="s3">'category'</span><span class="s2">)</span>
+    
+    <span class="s1">elif </span><span class="s2">(</span><span class="s1">not </span><span class="s2">has_y </span><span class="s1">and </span><span class="s2">basic):</span>
+        <span class="s2">preds_df = pd.concat([x_df</span><span class="s1">, </span><span class="s2">preds_mean</span><span class="s1">, </span><span class="s2">preds_median]</span><span class="s1">, </span><span class="s2">axis=</span><span class="s4">1</span><span class="s2">)</span>
+        
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">preds_df = pd.concat([x_df</span><span class="s1">, </span><span class="s2">x_normed_df</span><span class="s1">, </span><span class="s2">pred_vals</span><span class="s1">, </span><span class="s2">preds_mean</span><span class="s1">, </span><span class="s2">preds_median</span><span class="s1">, </span><span class="s2">preds_variance]</span><span class="s1">, </span><span class="s2">axis=</span><span class="s4">1</span><span class="s2">)</span>
+
+    <span class="s1">return </span><span class="s2">preds_df</span>
+<span class="s0">#%% 
+</span><span class="s2">train_ens_preds_df = infer_and_summarize(ens_model_list</span><span class="s1">, </span><span class="s2">x=X_train</span><span class="s1">, </span><span class="s2">y=y_train)</span>
+<span class="s2">train_ens_preds_df[</span><span class="s3">'Dataset'</span><span class="s2">] = </span><span class="s3">'Train'</span>
+<span class="s2">test_ens_preds_df = infer_and_summarize(ens_model_list</span><span class="s1">, </span><span class="s2">x=X_test</span><span class="s1">, </span><span class="s2">y=y_test)</span>
+<span class="s2">test_ens_preds_df[</span><span class="s3">'Dataset'</span><span class="s2">] = </span><span class="s3">'Test'</span>
+
+<span class="s2">ens_preds_df = pd.concat([train_ens_preds_df</span><span class="s1">, </span><span class="s2">test_ens_preds_df]</span><span class="s1">,</span><span class="s2">axis=</span><span class="s4">0</span><span class="s1">,</span><span class="s2">ignore_index=</span><span class="s1">True</span><span class="s2">)</span>
+<span class="s2">ens_preds_df</span>
+<span class="s0">#train_preds_df</span>
+<span class="s0">#preds_df = pd.DataFrame()</span>
+<span class="s0">#test = pd.DataFrame().size</span>
+<span class="s0">#%% 
+#plt.scatter(ens_preds_df['ls'],ens_preds_df['prediction_avg'])</span>
+<span class="s2">plt.figure(figsize = (</span><span class="s4">9</span><span class="s1">,</span><span class="s4">7</span><span class="s2">))</span>
+<span class="s2">ax = sns.scatterplot(data=ens_preds_df</span><span class="s1">, </span><span class="s2">x=</span><span class="s3">&quot;is_hit_pred_mean&quot;</span><span class="s1">, </span><span class="s2">y=</span><span class="s3">&quot;is_hit_pred_variance&quot;</span><span class="s1">, </span><span class="s2">hue=</span><span class="s3">&quot;is_hit_ctg&quot;</span><span class="s2">)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s2">corr = ens_preds_df.filter(regex=(</span><span class="s3">&quot;is_hit_pred_mdl_.*&quot;</span><span class="s2">)).corr()</span>
+<span class="s2">plt.figure(figsize = (</span><span class="s4">15</span><span class="s1">,</span><span class="s4">8</span><span class="s2">))</span>
+<span class="s2">ax = sns.heatmap(corr</span><span class="s1">, </span>
+            <span class="s2">xticklabels=</span><span class="s4">1</span><span class="s1">,</span>
+            <span class="s2">yticklabels=</span><span class="s4">1</span><span class="s1">,</span>
+            <span class="s2">cmap = </span><span class="s3">&quot;coolwarm&quot;</span><span class="s1">,</span>
+            <span class="s2">square = </span><span class="s1">True</span><span class="s2">)</span>
+<span class="s0">#ax.set_figsize(15,15)</span>
+<span class="s0">#plt.rcParams['figure.figsize']=(15,15)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s2">fig</span><span class="s1">, </span><span class="s2">axes = plt.subplots(</span><span class="s4">1</span><span class="s1">,</span><span class="s4">2</span><span class="s1">,</span><span class="s2">figsize=(</span><span class="s4">10</span><span class="s1">,</span><span class="s4">9</span><span class="s2">)</span><span class="s1">,</span><span class="s2">sharey = </span><span class="s1">True</span><span class="s2">)</span>
+
+<span class="s2">sns.boxplot(ax=axes[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span><span class="s2">x=</span><span class="s3">'is_hit_ctg'</span><span class="s1">, </span><span class="s2">y=</span><span class="s3">'is_hit_pred_mean'</span><span class="s1">, </span><span class="s2">data=ens_preds_df[ens_preds_df[</span><span class="s3">'Dataset'</span><span class="s2">]==</span><span class="s3">'Train'</span><span class="s2">])</span>
+<span class="s2">axes[</span><span class="s4">0</span><span class="s2">].set_title(</span><span class="s3">&quot;Training Accuracy&quot;</span><span class="s2">)</span>
+
+<span class="s2">sns.boxplot(ax=axes[</span><span class="s4">1</span><span class="s2">]</span><span class="s1">,</span><span class="s2">x=</span><span class="s3">'is_hit_ctg'</span><span class="s1">, </span><span class="s2">y=</span><span class="s3">'is_hit_pred_mean'</span><span class="s1">, </span><span class="s2">data=ens_preds_df[ens_preds_df[</span><span class="s3">'Dataset'</span><span class="s2">]==</span><span class="s3">'Test'</span><span class="s2">])</span>
+<span class="s2">axes[</span><span class="s4">1</span><span class="s2">].set_title(</span><span class="s3">&quot;Testing Accuracy&quot;</span><span class="s2">)</span>
+
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s2">test_vec_in = pd.DataFrame([[</span><span class="s4">115</span><span class="s1">,</span><span class="s4">10</span><span class="s1">,</span><span class="s4">0</span><span class="s2">]]</span><span class="s1">, </span><span class="s2">columns = input_vars_num)</span>
+<span class="s2">test_vec_preds = infer_and_summarize(model_list=ens_model_list</span><span class="s1">, </span><span class="s2">x=test_vec_in</span><span class="s1">, </span><span class="s2">basic=</span><span class="s1">False</span><span class="s2">)</span>
+<span class="s2">test_vec_preds = test_vec_preds.transpose()</span>
+<span class="s2">test_vec_preds</span>
+<span class="s0">#%% 
+</span><span class="s1">from </span><span class="s2">sklearn.utils.extmath </span><span class="s1">import </span><span class="s2">cartesian </span><span class="s1">as </span><span class="s2">cart</span>
+<span class="s0">#%% 
+</span><span class="s2">ls_lims = (</span><span class="s4">20</span><span class="s1">, </span><span class="s4">130</span><span class="s2">)</span>
+<span class="s2">la_lims = (-</span><span class="s4">90</span><span class="s1">, </span><span class="s4">90</span><span class="s2">)</span>
+<span class="s2">sa_lims = (-</span><span class="s4">60</span><span class="s1">, </span><span class="s4">60</span><span class="s2">)</span>
+
+<span class="s2">ls_grid = np.arange(start=ls_lims[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span><span class="s2">stop=ls_lims[</span><span class="s4">1</span><span class="s2">]+</span><span class="s4">1e-2</span><span class="s1">,</span><span class="s2">step=</span><span class="s4">1</span><span class="s2">)</span>
+<span class="s2">la_grid = np.arange(start=la_lims[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span><span class="s2">stop=la_lims[</span><span class="s4">1</span><span class="s2">]+</span><span class="s4">1e-2</span><span class="s1">,</span><span class="s2">step=</span><span class="s4">1</span><span class="s2">)</span>
+<span class="s2">sa_grid = np.arange(start=sa_lims[</span><span class="s4">0</span><span class="s2">]</span><span class="s1">,</span><span class="s2">stop=sa_lims[</span><span class="s4">1</span><span class="s2">]+</span><span class="s4">1e-2</span><span class="s1">,</span><span class="s2">step=</span><span class="s4">1</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">torch.cuda.empty_cache()</span>
+<span class="s2">print(torch.cuda.memory_allocated())</span>
+<span class="s0">#%% 
+</span><span class="s2">full_gridspace_df = pd.DataFrame(cart((ls_grid</span><span class="s1">,</span><span class="s2">la_grid</span><span class="s1">,</span><span class="s2">sa_grid))</span><span class="s1">, </span><span class="s2">columns = input_vars_num)</span>
+<span class="s0">#print(full_gridspace)</span>
+<span class="s2">full_gs_preds_df = infer_and_summarize(model_list=ens_model_list</span><span class="s1">, </span><span class="s2">x=full_gridspace_df</span><span class="s1">, </span><span class="s2">basic=</span><span class="s1">True</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s2">full_gs_preds_df</span>
+<span class="s0">#%% 
+#make line multicolored with https://matplotlib.org/stable/gallery/lines_bars_and_markers/multicolored_line.html</span>
+
+<span class="s2">set_ls = </span><span class="s4">110</span>
+<span class="s2">set_la = </span><span class="s4">15</span>
+
+<span class="s2">match_df_rows = full_gs_preds_df.loc[(full_gs_preds_df[</span><span class="s3">'launch_angle'</span><span class="s2">]==set_la) &amp; (full_gs_preds_df[</span><span class="s3">'launch_speed'</span><span class="s2">]==set_ls)]</span>
+<span class="s0">#print(match_df_rows)</span>
+<span class="s2">match_df_rows.plot(x = </span><span class="s3">'spray_angle'</span>
+                   <span class="s1">,</span><span class="s2">xlabel = </span><span class="s3">'Spray Angle'</span>
+                   <span class="s1">, </span><span class="s2">y = </span><span class="s3">'is_hit_pred_mean'</span>
+                   <span class="s1">, </span><span class="s2">ylim=(</span><span class="s4">0</span><span class="s1">,</span><span class="s4">1.1</span><span class="s2">)</span>
+                   <span class="s1">, </span><span class="s2">ylabel = </span><span class="s3">'Predicted Hit Probaility'</span>
+                   <span class="s1">, </span><span class="s2">legend = </span><span class="s1">None</span>
+                   <span class="s1">, </span><span class="s2">figsize=(</span><span class="s4">9</span><span class="s1">,</span><span class="s4">7</span><span class="s2">)</span>
+                   <span class="s1">, </span><span class="s2">lw=</span><span class="s4">7</span>
+                   <span class="s0">#, cmap=plt.get_cmap('inferno')</span>
+                   <span class="s2">)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#full_gs_preds_df[match_df_rows]</span>
+
+<span class="s0">#%% 
+</span><span class="s2">set_sa = </span><span class="s4">0</span>
+
+<span class="s0">#sub_gs_preds = np.array(full_gs_preds_df['is_hit_pred_median'][full_gs_preds_df['spray_angle']==set_sa])</span>
+<span class="s2">sub_gs_preds = np.array(full_gs_preds_df[</span><span class="s3">'is_hit_pred_mean'</span><span class="s2">][full_gs_preds_df[</span><span class="s3">'spray_angle'</span><span class="s2">]==set_sa])</span>
+<span class="s2">sub_gs_preds = sub_gs_preds.reshape(len(ls_grid)</span><span class="s1">,</span><span class="s2">len(la_grid)).transpose()</span>
+
+<span class="s2">X</span><span class="s1">, </span><span class="s2">Y = np.meshgrid(ls_grid</span><span class="s1">, </span><span class="s2">la_grid)</span>
+<span class="s2">fig</span><span class="s1">, </span><span class="s2">ax = plt.subplots(figsize=(</span><span class="s4">10</span><span class="s1">,</span><span class="s4">8.5</span><span class="s2">))</span>
+<span class="s2">cp = ax.contourf(X</span><span class="s1">, </span><span class="s2">Y</span><span class="s1">, </span><span class="s2">sub_gs_preds</span><span class="s1">, </span><span class="s2">levels=</span><span class="s4">500</span><span class="s1">, </span><span class="s2">vmin=</span><span class="s4">0</span><span class="s1">, </span><span class="s2">vmax=</span><span class="s4">1</span><span class="s1">, </span><span class="s2">cmap=plt.get_cmap(</span><span class="s3">'inferno'</span><span class="s2">))</span>
+<span class="s2">ax.set_title(</span><span class="s3">f'Predicted Hit Probability</span><span class="s1">\n</span><span class="s3">(Spray Angle = </span><span class="s1">{</span><span class="s2">set_sa</span><span class="s1">}</span><span class="s3">)'</span><span class="s2">)</span>
+<span class="s2">ax.set_xlabel(</span><span class="s3">'Launch Speed'</span><span class="s2">)</span>
+<span class="s2">ax.set_ylabel(</span><span class="s3">'Launch Angle'</span><span class="s2">)</span>
+<span class="s2">fig.colorbar(cp)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s2">set_la = </span><span class="s4">28</span>
+
+<span class="s2">sub_gs_preds = np.array(full_gs_preds_df[</span><span class="s3">'is_hit_pred_mean'</span><span class="s2">][full_gs_preds_df[</span><span class="s3">'launch_angle'</span><span class="s2">]==set_la])</span>
+<span class="s2">sub_gs_preds = sub_gs_preds.reshape(len(ls_grid)</span><span class="s1">,</span><span class="s2">len(sa_grid))</span>
+
+<span class="s2">X</span><span class="s1">, </span><span class="s2">Y = np.meshgrid(sa_grid</span><span class="s1">, </span><span class="s2">ls_grid)</span>
+<span class="s2">fig</span><span class="s1">, </span><span class="s2">ax = plt.subplots(figsize=(</span><span class="s4">10</span><span class="s1">,</span><span class="s4">8.5</span><span class="s2">))</span>
+<span class="s2">cp = ax.contourf(X</span><span class="s1">, </span><span class="s2">Y</span><span class="s1">, </span><span class="s2">sub_gs_preds</span><span class="s1">, </span><span class="s2">levels=</span><span class="s4">500</span><span class="s1">, </span><span class="s2">vmin=</span><span class="s4">0</span><span class="s1">, </span><span class="s2">vmax=</span><span class="s4">1</span><span class="s1">, </span><span class="s2">cmap=plt.get_cmap(</span><span class="s3">'inferno'</span><span class="s2">))</span>
+<span class="s2">ax.set_title(</span><span class="s3">f'Predicted Hit Probability</span><span class="s1">\n</span><span class="s3">(Launch Angle = </span><span class="s1">{</span><span class="s2">set_la</span><span class="s1">}</span><span class="s3">)'</span><span class="s2">)</span>
+<span class="s2">ax.set_ylabel(</span><span class="s3">'Launch Speed'</span><span class="s2">)</span>
+<span class="s2">ax.set_xlabel(</span><span class="s3">'Spray Angle'</span><span class="s2">)</span>
+<span class="s2">fig.colorbar(cp)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s2">set_ls = </span><span class="s4">100</span>
+
+<span class="s2">sub_gs_preds = np.array(full_gs_preds_df[</span><span class="s3">'is_hit_pred_mean'</span><span class="s2">][full_gs_preds_df[</span><span class="s3">'launch_speed'</span><span class="s2">]==set_ls])</span>
+<span class="s2">sub_gs_preds = sub_gs_preds.reshape(len(la_grid)</span><span class="s1">,</span><span class="s2">len(sa_grid))</span>
+
+<span class="s2">X</span><span class="s1">, </span><span class="s2">Y = np.meshgrid(sa_grid</span><span class="s1">, </span><span class="s2">la_grid)</span>
+<span class="s2">fig</span><span class="s1">, </span><span class="s2">ax = plt.subplots(figsize=(</span><span class="s4">10</span><span class="s1">,</span><span class="s4">8.5</span><span class="s2">))</span>
+<span class="s2">cp = ax.contourf(X</span><span class="s1">, </span><span class="s2">Y</span><span class="s1">, </span><span class="s2">sub_gs_preds</span><span class="s1">, </span><span class="s2">levels=</span><span class="s4">500</span><span class="s1">, </span><span class="s2">vmin=</span><span class="s4">0</span><span class="s1">, </span><span class="s2">vmax=</span><span class="s4">1</span><span class="s1">, </span><span class="s2">cmap=plt.get_cmap(</span><span class="s3">'inferno'</span><span class="s2">))</span>
+<span class="s2">ax.set_title(</span><span class="s3">f'Predicted Hit Probability</span><span class="s1">\n</span><span class="s3">(Launch Speed = </span><span class="s1">{</span><span class="s2">set_ls</span><span class="s1">}</span><span class="s3">)'</span><span class="s2">)</span>
+<span class="s2">ax.set_ylabel(</span><span class="s3">'Launch Angle'</span><span class="s2">)</span>
+<span class="s2">ax.set_xlabel(</span><span class="s3">'Spray Angle'</span><span class="s2">)</span>
+<span class="s2">fig.colorbar(cp)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s1">from </span><span class="s2">fastkde </span><span class="s1">import </span><span class="s2">fastKDE</span>
+<span class="s0">#%% 
+</span><span class="s2">kde_input_data = input_data.dropna().copy()</span>
+
+<span class="s2">pdf</span><span class="s1">, </span><span class="s2">values = fastKDE.pdf(kde_input_data[</span><span class="s3">&quot;launch_speed&quot;</span><span class="s2">]</span><span class="s1">, </span><span class="s2">kde_input_data[</span><span class="s3">&quot;launch_angle&quot;</span><span class="s2">])</span>
+<span class="s2">v1</span><span class="s1">,</span><span class="s2">v2 = values</span>
+<span class="s0">#%% 
+</span><span class="s2">fig</span><span class="s1">, </span><span class="s2">ax = plt.subplots(figsize=(</span><span class="s4">10</span><span class="s1">,</span><span class="s4">8.5</span><span class="s2">))</span>
+<span class="s2">cp = ax.contourf(v1</span><span class="s1">,</span><span class="s2">v2</span><span class="s1">,</span><span class="s2">pdf</span><span class="s1">,</span><span class="s2">levels=</span><span class="s4">500</span><span class="s1">, </span><span class="s2">cmap=plt.get_cmap(</span><span class="s3">'inferno'</span><span class="s2">))</span>
+<span class="s2">ax.set_title(</span><span class="s3">f'PDF of Batted Balls'</span><span class="s2">)</span>
+<span class="s2">ax.set_xlabel(</span><span class="s3">'Launch Speed'</span><span class="s2">)</span>
+<span class="s2">ax.set_xlim(ls_lims)</span>
+<span class="s2">ax.set_ylabel(</span><span class="s3">'Launch Angle'</span><span class="s2">)</span>
+<span class="s2">ax.set_ylim(la_lims)</span>
+<span class="s2">fig.colorbar(cp</span><span class="s1">, </span><span class="s2">format = </span><span class="s3">'%.1e'</span><span class="s2">)</span>
+<span class="s2">plt.show()</span>
+<span class="s0">#%% 
+#kde_input_data = input_data.dropna().copy()</span>
+<span class="s2">pdf</span><span class="s1">, </span><span class="s2">values = fastKDE.pdf(kde_input_data.to_numpy()</span><span class="s1">, </span><span class="s2">kde_input_data.to_numpy())</span>
+<span class="s0">#v1, v2, v3 = values</span>
+
+<span class="s0"># plt.contourf(v1,v2,pdf)</span>
+<span class="s0"># plt.show()</span>
+<span class="s0">#%% 
+</span><span class="s2">pdf.shape</span>
+<span class="s0">#%% md 
+</span><span class="s2">**Want to add:** 
+- Improve tracking and traceability 
+    - Ability to save and access the model parameters &amp; hyperparameters at specific checkpoints from the training process 
+    - Create ability to load from any checkpoint easily 
+    - Log model status at a per-iteration level 
+    - Display loss, param values, etc on a dashboard 
+    - Create visual display of nn model architecture 
+    - use named_parameters() instead of parameters() for printing out model architecture 
+- Ensembling methods 
+    - Approaches: 
+        - Mean from n models w/ same architecture 
+        - Mean from n models w/ different architecture 
+        - Weighted mean from n models, with learned weights targeting minimum classification error 
+    - Needs a way to properly store lists of models 
+- More flexible implementation of training &amp; evaluation 
+    - Add ability to specify whether fully reconstructing the model, or whether it's being retrained 
+    - Add more arguments to a train_and_eval function to control stopping criteria, number of epochs, what to output/return, etc 
+    - Implement single iteration step as a separately-called function, which is looped in main training function 
+    - Add model setup function that can set up all the parameters for the run 
+    - Create model predict function that at minimum, requires a model and an input tensor, and gives back a predicted output tensor. Or specify two tensors (input and validation) and get back the outputs for each. 
+    - Create model evaluation function that takes a loss function, a predicted output tensor, and an actual output tensor, and gives back the total loss. Allows for two sets of tensors as well. 
+    - Add early stopping logic, settable from function call 
+    - Consider creating a full class for the model trainer 
+- Add cross-validation to model training 
+- Optuna framework for creating training sub-cycles 
+    - e.g. First, perturb weights by taking w = w*Norm(1,0.1), then train model for 100 steps with AdamW using p params, then repeat, etc 
+- Using fastDKE, either print contour lines or apply mask to result plots to help indicate where hits are the most common 
+- Implement some way to restrict the number of trainable parameters and/or neuron count when constructing models 
+- Change usage of calls to time 
+    - Implement time.sleep() within multiple init step 
+    - Make time.perf_counter() work at a per-iteration basis, summing all into the total training time 
+- Round off numbers in printed results 
+</span><span class="s0">#%% 
+#as a method of data augmentation, can generate pdf(hit stats|is_hit=0), pdf(hit stats|is_hit=1), pdf(hit_stats)</span>
+<span class="s0">#then, calculate probablity of hit at each grid point using p_is_hit(grid) = pdf(hs|ih=1)/(pdf(hs|ih=0) + pdf(hs|ih=1))</span>
+<span class="s0">#predict nn with p_is_hit as target, and pdf(hit_stats) as the sample weights</span>
+<span class="s0">#theoretically, this provides us a way to smooth and/or augment the dataset</span>
+
+
+<span class="s0">#%% md 
+</span></pre>
+</body>
+</html>
